@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { FileText, Folder, Search, Clock, Edit2, Trash2, FilePlus, FolderPlus } from "lucide-react";
+import { FileText, Folder, Search, Clock, Edit2, Trash2, FilePlus, FolderPlus, List, TreePine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { FileTreeView } from "./file-tree-view";
 import type { MarkdownFile } from "@/types";
 
 interface FileSidebarProps {
@@ -49,15 +50,17 @@ interface FileSidebarProps {
   onFileDelete: (filepath: string) => void;
   onFileCreate: (name: string) => void;
   onFolderCreate: (name: string) => void;
+  onFileMove?: (sourcePath: string, destinationPath: string) => void;
 }
 
-export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete, onFileCreate, onFolderCreate }: FileSidebarProps) {
+export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete, onFileCreate, onFolderCreate, onFileMove }: FileSidebarProps) {
   const [search, setSearch] = useState("");
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState("");
   const [showFileDialog, setShowFileDialog] = useState(false);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
   const [newFileOrFolderName, setNewFileOrFolderName] = useState("");
+  const [viewMode, setViewMode] = useState<"tree" | "list">("tree");
 
   const filteredFiles = useMemo(() => {
     if (!search) return files;
@@ -129,6 +132,27 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setViewMode(viewMode === "tree" ? "list" : "tree")}
+                  >
+                    {viewMode === "tree" ? (
+                      <List className="h-4 w-4" />
+                    ) : (
+                      <TreePine className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{viewMode === "tree" ? "Vue liste" : "Vue arborescence"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <div className="h-px bg-border mx-4" />
 
@@ -162,85 +186,98 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
 
           <SidebarGroupContent>
             <ScrollArea className="h-[calc(100vh-180px)]">
-              <SidebarMenu>
-                {filteredFiles.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    {search ? "Aucun fichier trouvé" : "Aucun fichier markdown"}
-                  </div>
-                ) : (
-                  filteredFiles.map((file) => (
-                    <SidebarMenuItem key={file.path}>
-                      <ContextMenu>
-                        <ContextMenuTrigger asChild>
-                          <SidebarMenuButton
-                            onClick={() => onFileSelect(file.path)}
-                            isActive={currentFile === file.path}
-                            className="w-full"
-                          >
-                            <FileText className="h-4 w-4" />
-                            <div className="flex flex-col items-start flex-1 min-w-0">
-                              {renamingFile === file.path ? (
-                                <Input
-                                  value={newFileName}
-                                  onChange={(e) => setNewFileName(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      onFileRename(file.path, newFileName);
-                                      setRenamingFile(null);
-                                    } else if (e.key === 'Escape') {
-                                      setRenamingFile(null);
-                                    }
-                                  }}
-                                  onBlur={() => setRenamingFile(null)}
-                                  autoFocus
-                                  className="h-6 text-sm"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              ) : (
-                                <span className="font-medium truncate w-full">
-                                  {file.name}
-                                </span>
-                              )}
-                              {file.dir !== "." && (
-                                <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
-                                  <Folder className="h-3 w-3" />
-                                  {file.dir}
-                                </span>
-                              )}
-                            </div>
-                            <Badge variant="secondary" className="text-xs">
-                              {formatFileSize(file.size)}
-                            </Badge>
-                          </SidebarMenuButton>
-                        </ContextMenuTrigger>
-                        <ContextMenuContent className="w-48">
-                          <ContextMenuItem
-                            onClick={() => {
-                              setRenamingFile(file.path);
-                              setNewFileName(file.name);
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4 mr-2" />
-                            Renommer
-                          </ContextMenuItem>
-                          <ContextMenuSeparator />
-                          <ContextMenuItem
-                            onClick={() => {
-                              if (confirm(`Êtes-vous sûr de vouloir supprimer "${file.name}" ?`)) {
-                                onFileDelete(file.path);
-                              }
-                            }}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
-                          </ContextMenuItem>
-                        </ContextMenuContent>
-                      </ContextMenu>
-                    </SidebarMenuItem>
-                  ))
-                )}
-              </SidebarMenu>
+              {viewMode === "tree" ? (
+                <div className="px-2">
+                  <FileTreeView
+                    files={filteredFiles}
+                    currentFile={currentFile}
+                    onFileSelect={onFileSelect}
+                    onFileRename={onFileRename}
+                    onFileDelete={onFileDelete}
+                    onFileMove={onFileMove}
+                  />
+                </div>
+              ) : (
+                <SidebarMenu>
+                  {filteredFiles.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      {search ? "Aucun fichier trouvé" : "Aucun fichier markdown"}
+                    </div>
+                  ) : (
+                    filteredFiles.map((file) => (
+                      <SidebarMenuItem key={file.path}>
+                        <ContextMenu>
+                          <ContextMenuTrigger asChild>
+                            <SidebarMenuButton
+                              onClick={() => onFileSelect(file.path)}
+                              isActive={currentFile === file.path}
+                              className="w-full"
+                            >
+                              <FileText className="h-4 w-4" />
+                              <div className="flex flex-col items-start flex-1 min-w-0">
+                                {renamingFile === file.path ? (
+                                  <Input
+                                    value={newFileName}
+                                    onChange={(e) => setNewFileName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        onFileRename(file.path, newFileName);
+                                        setRenamingFile(null);
+                                      } else if (e.key === 'Escape') {
+                                        setRenamingFile(null);
+                                      }
+                                    }}
+                                    onBlur={() => setRenamingFile(null)}
+                                    autoFocus
+                                    className="h-6 text-sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <span className="font-medium truncate w-full">
+                                    {file.name}
+                                  </span>
+                                )}
+                                {file.dir !== "." && (
+                                  <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
+                                    <Folder className="h-3 w-3" />
+                                    {file.dir}
+                                  </span>
+                                )}
+                              </div>
+                              <Badge variant="secondary" className="text-xs">
+                                {formatFileSize(file.size)}
+                              </Badge>
+                            </SidebarMenuButton>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent className="w-48">
+                            <ContextMenuItem
+                              onClick={() => {
+                                setRenamingFile(file.path);
+                                setNewFileName(file.name);
+                              }}
+                            >
+                              <Edit2 className="h-4 w-4 mr-2" />
+                              Renommer
+                            </ContextMenuItem>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem
+                              onClick={() => {
+                                if (confirm(`Êtes-vous sûr de vouloir supprimer "${file.name}" ?`)) {
+                                  onFileDelete(file.path);
+                                }
+                              }}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      </SidebarMenuItem>
+                    ))
+                  )}
+                </SidebarMenu>
+              )}
             </ScrollArea>
           </SidebarGroupContent>
         </SidebarGroup>

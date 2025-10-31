@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X, Copy, Check } from "lucide-react";
+import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X, Copy, Check, Loader2, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -24,7 +24,7 @@ import { MarkdownPreview } from "./preview";
 import { WysiwygEditor } from "./wysiwyg-editor";
 import { apiClient } from "@/lib/api/client";
 import { saveEditorState, loadEditorState } from "@/lib/persistence";
-import type { MarkdownFile } from "@/types";
+import type { MarkdownFile, SearchResult } from "@/types";
 
 type ViewMode = "both" | "editor" | "preview";
 
@@ -46,6 +46,9 @@ export function EditorLayout() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [contentSearchResults, setContentSearchResults] = useState<SearchResult[]>([]);
+  const [isSearchingContent, setIsSearchingContent] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const hasUnsavedChanges = content !== originalContent;
 
@@ -59,6 +62,42 @@ export function EditorLayout() {
         file.path.toLowerCase().includes(searchLower)
     );
   }, [files, search]);
+
+  // Search in content with debounce
+  useEffect(() => {
+    if (!search || search.trim().length < 2) {
+      setContentSearchResults([]);
+      setIsSearchingContent(false);
+      return;
+    }
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    setIsSearchingContent(true);
+
+    // Debounce search by 500ms
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await apiClient.searchInContent(search.trim());
+        if (response.success) {
+          setContentSearchResults(response.results);
+        }
+      } catch (error) {
+        console.error('Error searching in content:', error);
+      } finally {
+        setIsSearchingContent(false);
+      }
+    }, 500);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [search]);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -343,6 +382,26 @@ export function EditorLayout() {
     }
   }, [loadFiles]);
 
+  // Handle file move
+  const handleFileMove = useCallback(async (sourcePath: string, destinationPath: string) => {
+    try {
+      const response = await apiClient.moveFile(sourcePath, destinationPath);
+      if (response.success) {
+        // Reload files list
+        await loadFiles();
+        // If the moved file is the current file, update the current file path
+        if (currentFile === sourcePath && response.newPath) {
+          setCurrentFile(response.newPath);
+        }
+      } else {
+        alert("Erreur : " + response.error);
+      }
+    } catch (error) {
+      console.error("Failed to move file:", error);
+      alert("Échec du déplacement du fichier");
+    }
+  }, [currentFile, loadFiles]);
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -364,6 +423,7 @@ export function EditorLayout() {
           onFileDelete={handleFileDelete}
           onFileCreate={handleFileCreate}
           onFolderCreate={handleFolderCreate}
+          onFileMove={handleFileMove}
         />
       </div>
 
@@ -380,6 +440,7 @@ export function EditorLayout() {
             onFileDelete={handleFileDelete}
             onFileCreate={handleFileCreate}
             onFolderCreate={handleFolderCreate}
+            onFileMove={handleFileMove}
           />
         </SheetContent>
       </Sheet>
@@ -430,33 +491,115 @@ export function EditorLayout() {
 
               {/* Search results dropdown */}
               {showSearchResults && search && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-50 max-h-[400px] overflow-y-auto">
-                  {filteredFiles.length === 0 ? (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-50 max-h-[500px] overflow-y-auto">
+                  {filteredFiles.length === 0 && contentSearchResults.length === 0 && !isSearchingContent ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
-                      Aucun fichier trouvé
+                      {search.trim().length < 2
+                        ? "Entrez au moins 2 caractères pour rechercher"
+                        : "Aucun résultat trouvé"}
                     </div>
                   ) : (
-                    <div className="py-2">
-                      {filteredFiles.map((file) => (
-                        <button
-                          key={file.path}
-                          onClick={() => {
-                            handleFileSelect(file.path);
-                            setSearch("");
-                            setShowSearchResults(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
-                        >
-                          <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate text-sm">{file.name}</div>
-                            {file.dir !== "." && (
-                              <div className="text-xs text-muted-foreground truncate">{file.dir}</div>
+                    <>
+                      {/* File name/path results */}
+                      {filteredFiles.length > 0 && (
+                        <div className="border-b">
+                          <div className="px-4 py-2 bg-muted/50 flex items-center gap-2">
+                            <Folder className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-xs font-medium text-muted-foreground uppercase">
+                              Noms de fichiers ({filteredFiles.length})
+                            </span>
+                          </div>
+                          <div className="py-1">
+                            {filteredFiles.map((file) => (
+                              <button
+                                key={file.path}
+                                onClick={() => {
+                                  handleFileSelect(file.path);
+                                  setSearch("");
+                                  setShowSearchResults(false);
+                                }}
+                                className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
+                              >
+                                <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium truncate text-sm">{file.name}</div>
+                                  {file.dir !== "." && (
+                                    <div className="text-xs text-muted-foreground truncate">{file.dir}</div>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Content search results */}
+                      {(isSearchingContent || contentSearchResults.length > 0) && (
+                        <div>
+                          <div className="px-4 py-2 bg-muted/50 flex items-center gap-2">
+                            <Search className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-xs font-medium text-muted-foreground uppercase">
+                              Contenu des fichiers
+                              {!isSearchingContent && ` (${contentSearchResults.length})`}
+                            </span>
+                            {isSearchingContent && (
+                              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                             )}
                           </div>
-                        </button>
-                      ))}
-                    </div>
+                          {isSearchingContent ? (
+                            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                              Recherche en cours...
+                            </div>
+                          ) : contentSearchResults.length === 0 ? (
+                            <div className="px-4 py-4 text-center text-sm text-muted-foreground">
+                              Aucun résultat dans le contenu
+                            </div>
+                          ) : (
+                            <div className="py-1">
+                              {contentSearchResults.map((result, idx) => (
+                                <div key={idx} className="border-b last:border-b-0">
+                                  <button
+                                    onClick={() => {
+                                      handleFileSelect(result.file.path);
+                                      setSearch("");
+                                      setShowSearchResults(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <FileText className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+                                      <span className="font-medium text-sm">{result.file.name}</span>
+                                      {result.file.dir !== "." && (
+                                        <span className="text-xs text-muted-foreground">· {result.file.dir}</span>
+                                      )}
+                                    </div>
+                                    {result.matches.slice(0, 2).map((match, matchIdx) => (
+                                      <div key={matchIdx} className="ml-5 mb-1 last:mb-0">
+                                        <div className="text-xs text-muted-foreground mb-0.5">
+                                          ligne {match.lineNumber}
+                                        </div>
+                                        <div className="text-xs bg-muted/50 p-1 rounded font-mono">
+                                          {match.content.substring(0, match.startIndex)}
+                                          <span className="bg-yellow-200 dark:bg-yellow-900 font-bold">
+                                            {match.content.substring(match.startIndex, match.endIndex)}
+                                          </span>
+                                          {match.content.substring(match.endIndex)}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {result.matches.length > 2 && (
+                                      <div className="ml-5 text-xs text-muted-foreground italic">
+                                        +{result.matches.length - 2} autre(s) correspondance(s)
+                                      </div>
+                                    )}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}

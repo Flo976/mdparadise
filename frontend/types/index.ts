@@ -26,3 +26,27 @@ export interface SaveFileResponse {
   message?: string;
   error?: string;
 }
+
+export interface SearchMatch {
+  lineNumber: number;
+  content: string;
+  startIndex: number;
+  endIndex: number;
+}
+
+export interface SearchResult {
+  file: {
+    name: string;
+    path: string;
+    dir: string;
+  };
+  matches: SearchMatch[];
+}
+
+export interface SearchResponse {
+  success: boolean;
+  results: SearchResult[];
+  query: string;
+  count: number;
+  error?: string;
+}

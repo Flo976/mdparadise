@@ -1,4 +1,4 @@
-import type { FilesResponse, FileContentResponse, SaveFileResponse } from '@/types';
+import type { FilesResponse, FileContentResponse, SaveFileResponse, SearchResponse } from '@/types';
 
 export class ApiClient {
   async getFiles(): Promise<FilesResponse> {
@@ -48,6 +48,22 @@ export class ApiClient {
       },
       body: JSON.stringify({ type, name, directory }),
     });
+    return response.json();
+  }
+
+  async moveFile(sourcePath: string, destinationPath: string): Promise<SaveFileResponse & { newPath?: string }> {
+    const response = await fetch('/api/move', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sourcePath, destinationPath }),
+    });
+    return response.json();
+  }
+
+  async searchInContent(query: string): Promise<SearchResponse> {
+    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
     return response.json();
   }
 }

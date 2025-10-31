@@ -106,7 +106,7 @@ export async function POST(
   }
 }
 
-// DELETE - Supprimer un fichier
+// DELETE - Supprimer un fichier ou dossier
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ filepath: string[] }> }
@@ -125,25 +125,32 @@ export async function DELETE(
       );
     }
 
-    // Vérifier que le fichier existe
+    // Vérifier que le fichier/dossier existe
+    let stats;
     try {
-      await fs.access(fullPath);
+      stats = await fs.stat(fullPath);
     } catch {
       return NextResponse.json(
-        { success: false, error: 'Fichier introuvable' },
+        { success: false, error: 'Fichier ou dossier introuvable' },
         { status: 404 }
       );
     }
 
-    // Supprimer le fichier
-    await fs.unlink(fullPath);
+    // Supprimer selon le type
+    if (stats.isDirectory()) {
+      // Supprimer le dossier et son contenu récursivement
+      await fs.rm(fullPath, { recursive: true, force: true });
+    } else {
+      // Supprimer le fichier
+      await fs.unlink(fullPath);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Fichier supprimé avec succès',
+      message: stats.isDirectory() ? 'Dossier supprimé avec succès' : 'Fichier supprimé avec succès',
     });
   } catch (error) {
-    console.error('Error deleting file:', error);
+    console.error('Error deleting:', error);
     return NextResponse.json(
       {
         success: false,
