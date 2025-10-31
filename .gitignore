@@ -1,12 +1,56 @@
-# Environnement virtuel Python
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+
+# Production
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# MDParadise instance data
+.mdparadise-instance.json
+
+# Python (legacy - should not exist anymore)
 venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Cache pip
 .pip_cache/
+
+# IDE & Tools
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.claude/
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.md_server_temp_*.py
+
+# Backup files
+*.backup
+*.backup-*

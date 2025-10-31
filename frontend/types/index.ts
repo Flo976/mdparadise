@@ -1,0 +1,28 @@
+export interface MarkdownFile {
+  name: string;
+  path: string;
+  dir: string;
+  size: number;
+  mtime: number; // modification time in milliseconds
+}
+
+export interface FilesResponse {
+  success: boolean;
+  files: MarkdownFile[];
+  base_dir: string;
+  error?: string;
+}
+
+export interface FileContentResponse {
+  success: boolean;
+  content: string;
+  html: string;
+  path: string;
+  error?: string;
+}
+
+export interface SaveFileResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
