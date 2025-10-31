@@ -98,11 +98,16 @@ program
     process.env.PORT = port.toString();
 
     // Start Next.js server
-    const nextBin = path.join(__dirname, '..', 'node_modules', '.bin', 'next');
+    const isWindows = process.platform === 'win32';
+    const nextBin = isWindows
+      ? path.join(__dirname, '..', 'node_modules', '.bin', 'next.cmd')
+      : path.join(__dirname, '..', 'node_modules', '.bin', 'next');
+
     const nextProcess = spawn(nextBin, ['dev', '-p', port.toString()], {
       cwd: path.join(__dirname, '..'),
       stdio: 'inherit',
       env: { ...process.env },
+      shell: isWindows, // Use shell on Windows to handle .cmd files
     });
 
     nextProcess.on('error', (err) => {
