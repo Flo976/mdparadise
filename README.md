@@ -59,7 +59,9 @@
 
 ## 🚀 Quick Start
 
-### One-time setup
+> **Windows users:** See the [Windows Installation Guide](WINDOWS.md) for PowerShell-specific instructions.
+
+### One-time setup (Linux/macOS)
 
 ```bash
 # Clone the repository
@@ -68,6 +70,21 @@ cd mdparadise
 
 # Build the project
 ./build-cli.sh
+
+# Install globally
+cd frontend
+npm link
+```
+
+### One-time setup (Windows)
+
+```powershell
+# Clone the repository
+git clone https://github.com/Flo976/mdparadise.git
+cd mdparadise
+
+# Build the project
+.\build-cli.ps1
 
 # Install globally
 cd frontend
@@ -99,8 +116,13 @@ mdparadise --no-open
 
 - **Node.js** 18+ (recommended: 20 LTS or 23+)
 - **npm** 9+
+- **Git** (for cloning the repository)
 
-### Step-by-step
+> **📘 Platform-specific guides:**
+> - **Windows:** See [WINDOWS.md](WINDOWS.md) for detailed PowerShell instructions
+> - **Linux/macOS:** Follow the instructions below
+
+### Step-by-step (Linux/macOS)
 
 1. **Clone the repository**
    ```bash
@@ -129,6 +151,35 @@ mdparadise --no-open
    mdparadise --version
    mdparadise --help
    ```
+
+### Step-by-step (Windows)
+
+1. **Clone the repository** (in PowerShell)
+   ```powershell
+   git clone https://github.com/Flo976/mdparadise.git
+   cd mdparadise
+   ```
+
+2. **Run the build script**
+   ```powershell
+   .\build-cli.ps1
+   ```
+   If you get an execution policy error, run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+3. **Install globally**
+   ```powershell
+   cd frontend
+   npm link
+   ```
+   You may need to run PowerShell as Administrator.
+
+4. **Verify installation** (after reopening PowerShell)
+   ```powershell
+   mdparadise --version
+   mdparadise --help
+   ```
+
+For detailed Windows troubleshooting, see [WINDOWS.md](WINDOWS.md).
 
 ### Uninstall
 
@@ -366,6 +417,8 @@ npm run build
 
 ## 🐛 Troubleshooting
 
+> **Windows users:** See [WINDOWS.md](WINDOWS.md) for Windows-specific troubleshooting (PATH issues, execution policy, usernames with spaces, etc.)
+
 ### Port already in use
 
 MDParadise automatically detects and uses the next available port. If you see:
@@ -376,24 +429,47 @@ This is normal behavior when running multiple instances.
 
 ### `mdparadise` command not found
 
+**Linux/macOS:**
 ```bash
 cd mdparadise/frontend
 npm link
 ```
 
+**Windows PowerShell:**
+```powershell
+# Close and reopen PowerShell first, then check:
+mdparadise --version
+
+# If still not found, check PATH:
+npm config get prefix
+# Add that directory to your PATH (see WINDOWS.md)
+```
+
 ### Permission errors on build
 
+**Linux/macOS:**
 ```bash
 cd mdparadise
 sudo rm -rf frontend/.next
 ./build-cli.sh
 ```
 
+**Windows PowerShell (as Administrator):**
+```powershell
+cd mdparadise
+Remove-Item -Path frontend\.next -Recurse -Force
+.\build-cli.ps1
+```
+
 ### Lock file error
 
 If you see "Unable to acquire lock":
 ```bash
+# Linux/macOS
 rm -f frontend/.next/dev/lock
+
+# Windows
+Remove-Item -Path frontend\.next\dev\lock -Force
 ```
 
 ---

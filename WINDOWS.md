@@ -2,6 +2,22 @@
 
 This guide provides Windows-specific instructions for installing and running MDParadise.
 
+## Quick Reference
+
+**Already installed?** Just run:
+```powershell
+mdparadise
+```
+
+**First time?** Follow the installation steps below. It takes about 2 minutes.
+
+**Command not found after install?**
+1. Close and reopen PowerShell
+2. Check if npm is in PATH: `npm config get prefix`
+3. See [Troubleshooting](#troubleshooting) section
+
+---
+
 ## Prerequisites
 
 - **Node.js** 18+ (Download from [nodejs.org](https://nodejs.org/))
@@ -50,7 +66,10 @@ cd frontend  # if not already there
 npm link
 ```
 
-**Note:** You may need to run PowerShell as Administrator for `npm link` to work.
+**Important Notes:**
+- You may need to run PowerShell as Administrator for `npm link` to work
+- After `npm link`, **close and reopen PowerShell** for the PATH to refresh
+- If you update the code later, run `npm link` again from the frontend directory
 
 ### 4. Verify Installation
 
@@ -185,11 +204,30 @@ Remove-Item -Path mdparadise -Recurse -Force
 
 ## Common Windows Issues
 
+### Paths with Spaces in Username
+
+If your Windows username contains spaces (e.g., "Florent Didelot"), MDParadise handles this automatically. The latest version includes fixes for this common Windows issue.
+
+If you installed an older version and encounter errors like:
+```
+'C:\Users\Florent' is not recognized...
+```
+
+Update to the latest version:
+```powershell
+cd "C:\Users\YourName\Documents\GitHub\mdparadise"
+git pull
+.\build-cli.ps1
+cd frontend
+npm link
+```
+
 ### Backslash vs Forward Slash
 
 Windows uses backslashes (`\`) for paths. MDParadise handles both:
 - ✅ `C:\Users\Name\Documents\notes`
 - ✅ `C:/Users/Name/Documents/notes`
+- ✅ `"C:\Users\Name With Spaces\Documents\notes"` (with quotes if spaces)
 
 ### Line Endings
 
