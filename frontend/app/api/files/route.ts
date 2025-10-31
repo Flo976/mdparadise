@@ -8,6 +8,7 @@ interface MarkdownFile {
   dir: string;
   size: number;
   mtime: number;
+  type?: 'file' | 'directory';
 }
 
 // Dossiers à ignorer
@@ -15,6 +16,7 @@ const IGNORED_DIRS = ['.git', 'node_modules', '__pycache__', '.venv', 'venv', '.
 
 async function getAllMarkdownFiles(baseDir: string): Promise<MarkdownFile[]> {
   const files: MarkdownFile[] = [];
+  const directories = new Set<string>();
 
   async function walkDir(dir: string) {
     try {
@@ -22,15 +24,17 @@ async function getAllMarkdownFiles(baseDir: string): Promise<MarkdownFile[]> {
 
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
+        const relativePath = path.relative(baseDir, fullPath);
 
         if (entry.isDirectory()) {
           // Ignorer les dossiers spéciaux
           if (!IGNORED_DIRS.includes(entry.name) && !entry.name.startsWith('.')) {
+            // Ajouter le dossier à la liste
+            directories.add(relativePath);
             await walkDir(fullPath);
           }
         } else if (entry.isFile() && entry.name.endsWith('.md')) {
           const stats = await fs.stat(fullPath);
-          const relativePath = path.relative(baseDir, fullPath);
           const dirName = path.dirname(relativePath);
 
           files.push({
@@ -39,6 +43,7 @@ async function getAllMarkdownFiles(baseDir: string): Promise<MarkdownFile[]> {
             dir: dirName === '.' ? '.' : dirName,
             size: stats.size,
             mtime: stats.mtimeMs,
+            type: 'file',
           });
         }
       }
@@ -48,6 +53,22 @@ async function getAllMarkdownFiles(baseDir: string): Promise<MarkdownFile[]> {
   }
 
   await walkDir(baseDir);
+
+  // Ajouter les dossiers comme entrées virtuelles
+  for (const dirPath of directories) {
+    const dirName = path.basename(dirPath);
+    const parentDir = path.dirname(dirPath);
+
+    files.push({
+      name: dirName,
+      path: dirPath,
+      dir: parentDir === '.' ? '.' : parentDir,
+      size: 0,
+      mtime: Date.now(),
+      type: 'directory',
+    });
+  }
+
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
 

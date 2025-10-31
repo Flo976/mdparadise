@@ -54,3 +54,4 @@ yarn-error.log*
 # Backup files
 *.backup
 *.backup-*
+docs/

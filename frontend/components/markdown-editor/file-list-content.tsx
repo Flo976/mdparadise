@@ -63,6 +63,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
 
   const recentFiles = useMemo(() => {
     return [...files]
+      .filter((file) => file.type !== 'directory')
       .sort((a, b) => b.mtime - a.mtime)
       .slice(0, 3);
   }, [files]);

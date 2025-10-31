@@ -4,6 +4,7 @@ export interface MarkdownFile {
   dir: string;
   size: number;
   mtime: number; // modification time in milliseconds
+  type?: 'file' | 'directory'; // type of entry (optional for backward compatibility)
 }
 
 export interface FilesResponse {

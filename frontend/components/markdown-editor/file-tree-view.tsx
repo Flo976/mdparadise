@@ -61,52 +61,57 @@ function buildTree(files: MarkdownFile[]): TreeNode[] {
   const root: TreeNode[] = [];
   const folderMap = new Map<string, TreeNode>();
 
-  // First pass: create all folders
+  // First pass: create folders from directory entries
   files.forEach((file) => {
-    if (file.dir === ".") return;
-
-    const parts = file.dir.split("/");
-    let currentPath = "";
-
-    parts.forEach((part, index) => {
-      const parentPath = currentPath;
-      currentPath = currentPath ? `${currentPath}/${part}` : part;
-
-      if (!folderMap.has(currentPath)) {
-        const folderNode: TreeNode = {
-          id: currentPath,
-          name: part,
-          path: currentPath,
-          type: "folder",
-          children: [],
-        };
-
-        folderMap.set(currentPath, folderNode);
-
-        if (parentPath && folderMap.has(parentPath)) {
-          folderMap.get(parentPath)!.children!.push(folderNode);
-        } else if (index === 0) {
-          root.push(folderNode);
-        }
-      }
-    });
+    if (file.type === "directory") {
+      const folderNode: TreeNode = {
+        id: file.path,
+        name: file.name,
+        path: file.path,
+        type: "folder",
+        children: [],
+      };
+      folderMap.set(file.path, folderNode);
+    }
   });
 
-  // Second pass: add files
-  files.forEach((file) => {
-    const fileNode: TreeNode = {
-      id: file.path,
-      name: file.name,
-      path: file.path,
-      type: "file",
-      size: file.size,
-      mtime: file.mtime,
-    };
+  // Second pass: organize folders into hierarchy
+  folderMap.forEach((folder) => {
+    if (folder.path.includes("/")) {
+      const parentPath = folder.path.substring(0, folder.path.lastIndexOf("/"));
+      const parent = folderMap.get(parentPath);
+      if (parent) {
+        parent.children!.push(folder);
+      } else {
+        // Parent doesn't exist in map, add to root
+        root.push(folder);
+      }
+    } else {
+      // Top-level folder
+      root.push(folder);
+    }
+  });
 
-    if (file.dir === ".") {
-      root.push(fileNode);
-    } else if (folderMap.has(file.dir)) {
-      folderMap.get(file.dir)!.children!.push(fileNode);
+  // Third pass: add files
+  files.forEach((file) => {
+    if (file.type === "file" || !file.type) {
+      const fileNode: TreeNode = {
+        id: file.path,
+        name: file.name,
+        path: file.path,
+        type: "file",
+        size: file.size,
+        mtime: file.mtime,
+      };
+
+      if (file.dir === ".") {
+        root.push(fileNode);
+      } else if (folderMap.has(file.dir)) {
+        folderMap.get(file.dir)!.children!.push(fileNode);
+      } else {
+        // Folder doesn't exist, add to root
+        root.push(fileNode);
+      }
     }
   });
 
@@ -357,8 +362,39 @@ export function FileTreeView({
     const { active, over } = event;
 
     if (over && active.id !== over.id && onFileMove) {
-      // TODO: Implement move logic
-      console.log("Move", active.id, "to", over.id);
+      const sourceId = active.id as string;
+      const targetId = over.id as string;
+
+      // Find source and target nodes
+      const sourceNode = flatTree.find((n) => n.id === sourceId);
+      const targetNode = flatTree.find((n) => n.id === targetId);
+
+      if (!sourceNode || !targetNode) {
+        setActiveId(null);
+        return;
+      }
+
+      // Determine new path based on target type
+      let newPath: string;
+
+      if (targetNode.type === "folder") {
+        // Moving into a folder
+        newPath = `${targetNode.path}/${sourceNode.name}`;
+      } else {
+        // Moving next to a file (same directory)
+        const targetDir = targetNode.path.includes("/")
+          ? targetNode.path.substring(0, targetNode.path.lastIndexOf("/"))
+          : ".";
+
+        newPath = targetDir === "."
+          ? sourceNode.name
+          : `${targetDir}/${sourceNode.name}`;
+      }
+
+      // Don't move if it's the same location
+      if (newPath !== sourceNode.path) {
+        onFileMove(sourceNode.path, newPath);
+      }
     }
 
     setActiveId(null);
