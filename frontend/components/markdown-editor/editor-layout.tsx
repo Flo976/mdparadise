@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X } from "lucide-react";
+import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -45,6 +45,7 @@ export function EditorLayout() {
   const [search, setSearch] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
   const hasUnsavedChanges = content !== originalContent;
 
@@ -235,6 +236,35 @@ export function EditorLayout() {
     });
   };
 
+  // Copy file path to clipboard
+  const handleCopyPath = useCallback(async () => {
+    if (!currentFile) return;
+
+    const pathWithPrefix = `@${currentFile}`;
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(pathWithPrefix);
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement("textarea");
+        textArea.value = pathWithPrefix;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+    }
+  }, [currentFile]);
+
   // Handle file rename
   const handleFileRename = useCallback(async (filepath: string, newName: string) => {
     try {
@@ -277,6 +307,42 @@ export function EditorLayout() {
     }
   }, [currentFile, loadFiles]);
 
+  // Handle file create
+  const handleFileCreate = useCallback(async (name: string) => {
+    try {
+      const response = await apiClient.createFileOrFolder('file', name);
+      if (response.success) {
+        // Reload files list
+        await loadFiles();
+        // Open the newly created file
+        if (response.path) {
+          await handleFileSelect(response.path);
+        }
+      } else {
+        alert("Erreur : " + response.error);
+      }
+    } catch (error) {
+      console.error("Failed to create file:", error);
+      alert("Échec de la création du fichier");
+    }
+  }, [loadFiles, handleFileSelect]);
+
+  // Handle folder create
+  const handleFolderCreate = useCallback(async (name: string) => {
+    try {
+      const response = await apiClient.createFileOrFolder('folder', name);
+      if (response.success) {
+        // Reload files list
+        await loadFiles();
+      } else {
+        alert("Erreur : " + response.error);
+      }
+    } catch (error) {
+      console.error("Failed to create folder:", error);
+      alert("Échec de la création du dossier");
+    }
+  }, [loadFiles]);
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -296,6 +362,8 @@ export function EditorLayout() {
           baseDir={baseDir}
           onFileRename={handleFileRename}
           onFileDelete={handleFileDelete}
+          onFileCreate={handleFileCreate}
+          onFolderCreate={handleFolderCreate}
         />
       </div>
 
@@ -310,6 +378,8 @@ export function EditorLayout() {
             baseDir={baseDir}
             onFileRename={handleFileRename}
             onFileDelete={handleFileDelete}
+            onFileCreate={handleFileCreate}
+            onFolderCreate={handleFolderCreate}
           />
         </SheetContent>
       </Sheet>
@@ -405,6 +475,19 @@ export function EditorLayout() {
                     <span className="font-semibold truncate text-sm max-w-[200px]">
                       {currentFile}
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleCopyPath}
+                      className="h-6 w-6"
+                      title="Copier le chemin du fichier"
+                    >
+                      {copied ? (
+                        <Check className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
                     {!isMobile && (
                       <Badge variant={hasUnsavedChanges ? "destructive" : "secondary"} className="text-xs">
                         {saving ? "Enregistrement..." : hasUnsavedChanges ? "Non enregistré" : "Enregistré"}

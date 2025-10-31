@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { FileText, Folder, Search, Clock, Edit2, Trash2 } from "lucide-react";
+import { FileText, Folder, Search, Clock, Edit2, Trash2, FilePlus, FolderPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -12,6 +13,20 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -32,12 +47,17 @@ interface FileSidebarProps {
   baseDir: string;
   onFileRename: (filepath: string, newName: string) => void;
   onFileDelete: (filepath: string) => void;
+  onFileCreate: (name: string) => void;
+  onFolderCreate: (name: string) => void;
 }
 
-export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete }: FileSidebarProps) {
+export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete, onFileCreate, onFolderCreate }: FileSidebarProps) {
   const [search, setSearch] = useState("");
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState("");
+  const [showFileDialog, setShowFileDialog] = useState(false);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+  const [newFileOrFolderName, setNewFileOrFolderName] = useState("");
 
   const filteredFiles = useMemo(() => {
     if (!search) return files;
@@ -64,6 +84,54 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          {/* Action buttons */}
+          <div className="px-4 py-2 flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setNewFileOrFolderName("");
+                      setShowFileDialog(true);
+                    }}
+                  >
+                    <FilePlus className="h-4 w-4 mr-2" />
+                    Fichier
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Créer un nouveau fichier markdown</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setNewFileOrFolderName("");
+                      setShowFolderDialog(true);
+                    }}
+                  >
+                    <FolderPlus className="h-4 w-4 mr-2" />
+                    Dossier
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Créer un nouveau dossier</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="h-px bg-border mx-4" />
+
 
           {/* Recent Files Section */}
           {!search && recentFiles.length > 0 && (
@@ -177,6 +245,108 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Dialog for creating a new file */}
+      <Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un nouveau fichier</DialogTitle>
+            <DialogDescription>
+              Entrez le nom du nouveau fichier markdown. L'extension .md sera ajoutée automatiquement si nécessaire.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="mon-fichier"
+              value={newFileOrFolderName}
+              onChange={(e) => setNewFileOrFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newFileOrFolderName.trim()) {
+                  const name = newFileOrFolderName.trim();
+                  onFileCreate(name.endsWith('.md') ? name : `${name}.md`);
+                  setShowFileDialog(false);
+                  setNewFileOrFolderName("");
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowFileDialog(false);
+                setNewFileOrFolderName("");
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() => {
+                if (newFileOrFolderName.trim()) {
+                  const name = newFileOrFolderName.trim();
+                  onFileCreate(name.endsWith('.md') ? name : `${name}.md`);
+                  setShowFileDialog(false);
+                  setNewFileOrFolderName("");
+                }
+              }}
+              disabled={!newFileOrFolderName.trim()}
+            >
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for creating a new folder */}
+      <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer un nouveau dossier</DialogTitle>
+            <DialogDescription>
+              Entrez le nom du nouveau dossier.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder="mon-dossier"
+              value={newFileOrFolderName}
+              onChange={(e) => setNewFileOrFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newFileOrFolderName.trim()) {
+                  onFolderCreate(newFileOrFolderName.trim());
+                  setShowFolderDialog(false);
+                  setNewFileOrFolderName("");
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowFolderDialog(false);
+                setNewFileOrFolderName("");
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() => {
+                if (newFileOrFolderName.trim()) {
+                  onFolderCreate(newFileOrFolderName.trim());
+                  setShowFolderDialog(false);
+                  setNewFileOrFolderName("");
+                }
+              }}
+              disabled={!newFileOrFolderName.trim()}
+            >
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }

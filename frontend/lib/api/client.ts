@@ -39,6 +39,17 @@ export class ApiClient {
     });
     return response.json();
   }
+
+  async createFileOrFolder(type: 'file' | 'folder', name: string, directory?: string): Promise<SaveFileResponse & { path?: string }> {
+    const response = await fetch('/api/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type, name, directory }),
+    });
+    return response.json();
+  }
 }
 
 export const apiClient = new ApiClient();
