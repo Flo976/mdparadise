@@ -48,7 +48,10 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileS
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3">
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold">MDParadise</h2>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="MDParadise" className="h-8 w-8" />
+            <h2 className="text-lg font-semibold">MDParadise</h2>
+          </div>
           <p className="text-xs text-muted-foreground truncate" title={baseDir}>
             {baseDir}
           </p>

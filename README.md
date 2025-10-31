@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="logo.png" alt="MDParadise Logo" width="200"/>
+
 # 📝 MDParadise
 
 **The beautiful Markdown editor you can launch anywhere**
@@ -15,7 +17,7 @@
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Installation](#-installation) • [Usage](#-usage) • [Contributing](#-contributing)
 
-![MDParadise Screenshot](https://via.placeholder.com/800x450/1a1a1a/10b981?text=MDParadise+Editor)
+![MDParadise Screenshot](screenshots/screenshot-app.png)
 
 </div>
 
@@ -61,7 +63,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/mdparadise.git
+git clone https://github.com/Flo976/mdparadise.git
 cd mdparadise
 
 # Build the project
@@ -102,7 +104,7 @@ mdparadise --no-open
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/mdparadise.git
+   git clone https://github.com/Flo976/mdparadise.git
    cd mdparadise
    ```
 
@@ -338,7 +340,7 @@ Saves content to a file.
 
 ```bash
 # Clone and install
-git clone https://github.com/YOUR_USERNAME/mdparadise.git
+git clone https://github.com/Flo976/mdparadise.git
 cd mdparadise/frontend
 npm install
 
@@ -446,6 +448,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ and ☕**
 
-[⭐ Star this repo](https://github.com/YOUR_USERNAME/mdparadise) if you find it useful!
+[⭐ Star this repo](https://github.com/Flo976/mdparadise) if you find it useful!
 
 </div>
