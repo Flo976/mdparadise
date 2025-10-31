@@ -99,14 +99,16 @@ program
 
     // Start Next.js server
     const isWindows = process.platform === 'win32';
-    const nextBin = isWindows
-      ? path.join(__dirname, '..', 'node_modules', '.bin', 'next.cmd')
-      : path.join(__dirname, '..', 'node_modules', '.bin', 'next');
+    const nextCommand = isWindows ? 'next.cmd' : 'next';
+    const nextBinPath = path.join(__dirname, '..', 'node_modules', '.bin');
 
-    const nextProcess = spawn(nextBin, ['dev', '-p', port.toString()], {
+    const nextProcess = spawn(nextCommand, ['dev', '-p', port.toString()], {
       cwd: path.join(__dirname, '..'),
       stdio: 'inherit',
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        PATH: `${nextBinPath}${path.delimiter}${process.env.PATH}`
+      },
       shell: isWindows, // Use shell on Windows to handle .cmd files
     });
 
