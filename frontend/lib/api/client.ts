@@ -21,6 +21,24 @@ export class ApiClient {
     });
     return response.json();
   }
+
+  async deleteFile(filepath: string): Promise<SaveFileResponse> {
+    const response = await fetch(`/api/file/${filepath}`, {
+      method: 'DELETE',
+    });
+    return response.json();
+  }
+
+  async renameFile(filepath: string, newName: string): Promise<SaveFileResponse & { newPath?: string }> {
+    const response = await fetch(`/api/file/${filepath}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ newName }),
+    });
+    return response.json();
+  }
 }
 
 export const apiClient = new ApiClient();

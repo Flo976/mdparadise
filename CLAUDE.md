@@ -4,133 +4,206 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MDParadise is a local Flask-based web server for viewing and editing Markdown files with a modern split-view interface. It can be launched from any directory and provides real-time preview of Markdown content with an integrated CodeMirror editor.
+MDParadise is a Next.js-based markdown editor with live preview, WYSIWYG editing, and a modern UI. It's distributed as a global npm CLI tool that can be launched from any directory to browse and edit markdown files in that location.
 
 ## Architecture
 
-### Core Components
+### Technology Stack
 
-**md_server.py** - Main Flask application (single-file server)
-- Flask server serving both API endpoints and embedded HTML/JS frontend
-- Runs on port 4444 by default (configurable at line 20: `PORT = 4444`)
-- All frontend code is embedded in `HTML_TEMPLATE` variable (lines 130-632)
-- Uses `BASE_DIR = os.getcwd()` to determine working directory - the server can only access files within this directory and subdirectories
+- **Next.js 16** (App Router) - Server framework
+- **React 19** with TypeScript - UI framework
+- **Tailwind CSS 4** - Styling
+- **shadcn/ui** - UI components
+- **CodeMirror** - Code editor with One Dark theme
+- **marked.js** - Markdown parsing and rendering
+- **Commander** - CLI argument parsing
 
-**start_md_server.sh** - Launch wrapper script
-- Resolves symlinks to find actual installation directory
-- Activates Python virtual environment from `venv/` directory
-- Launches md_server.py with correct Python interpreter
-- Can accept optional directory argument to change working directory
+### Core Architecture
 
-**install.sh** - Installation script
-- Creates Python virtual environment in `venv/` directory
-- Installs dependencies from `md_server_requirements.txt`
-- Offers multiple installation methods (system-wide, user-local, alias-based)
+```
+CLI (bin/mdparadise.js)
+  ↓ spawns
+Next.js Dev Server
+  ↓ serves
+React App (app/page.tsx → EditorLayout)
+  ↓ uses
+API Routes (app/api/files, app/api/file/[...filepath])
+  ↓ access
+Node.js fs module (filesystem operations)
+```
 
-### API Endpoints
+The application uses `MDPARADISE_BASE_DIR` environment variable to determine which directory to serve files from. This is set by the CLI entry point based on the directory argument.
 
-- `GET /` - Serves main HTML interface
-- `GET /api/files` - Returns list of all .md files in BASE_DIR (recursively)
-- `GET /api/file/<path:filepath>` - Returns file content (both raw markdown and rendered HTML)
-- `POST /api/file/<path:filepath>` - Saves file content
+### Key Components
 
-### Frontend Architecture
+**bin/mdparadise.js** - CLI entry point
+- Parses command-line arguments (directory, port, --no-open)
+- Detects available port (tries 4445, then increments if busy)
+- Sets `MDPARADISE_BASE_DIR` and `PORT` environment variables
+- Spawns Next.js dev server
+- Opens browser automatically after 3-second delay (unless --no-open)
 
-Single-page application embedded in HTML_TEMPLATE:
-- **CodeMirror** editor (Dracula theme) for markdown editing
-- **marked.js** for client-side markdown rendering
-- Split-view layout: editor on left, preview on right
-- File list sidebar with search functionality
-- Three view modes: both panels, editor only, preview only
+**app/api/files/route.ts** - File listing endpoint
+- Recursively scans `MDPARADISE_BASE_DIR` for .md files
+- Ignores: .git, node_modules, __pycache__, .venv, venv, .next, dist, build, and hidden directories
+- Returns file metadata (name, path, dir, size, mtime)
 
-### Security Model
+**app/api/file/[...filepath]/route.ts** - File read/write endpoint
+- GET: Returns file content
+- POST: Saves file content
+- Path traversal protection via `isPathSafe()` check
 
-The server implements path traversal protection in md_server.py:
-- Lines 74-76 and 113-114: Verifies requested file paths start with BASE_DIR
-- Returns 403 Forbidden for paths outside BASE_DIR
-- Ignores common directories: .git, node_modules, __pycache__, .venv, venv (line 39)
+**components/markdown-editor/editor-layout.tsx** - Main UI component
+- Manages application state (files list, current file, content, view mode)
+- Auto-refreshes file list every 5 seconds
+- Desktop: sidebar + resizable panels (editor/preview)
+- Mobile: preview-only mode with menu sheet
+- State persistence via localStorage (remembers last file and view mode)
+- Unsaved changes warning
+- Three view modes: both, editor-only, preview-only
+
+**components/markdown-editor/editor.tsx** - CodeMirror editor
+- Uses @uiw/react-codemirror with @codemirror/lang-markdown
+- One Dark theme
+- Ctrl+S / Cmd+S to save
+
+**components/markdown-editor/preview.tsx** - Read-only markdown preview
+- Uses marked.js for rendering
+- GitHub markdown CSS styling
+- Anchor navigation support
+- Copy button on code blocks
+
+**components/markdown-editor/wysiwyg-editor.tsx** - Editable preview
+- Contenteditable-based visual editor
+- Converts changes back to markdown on blur/input
 
 ## Development Commands
 
-### Installation
-```bash
-# Run interactive installation (creates venv, installs deps, sets up command)
-./install.sh
+### Initial Setup
 
-# Manual installation without global command
-pip3 install -r md_server_requirements.txt
+```bash
+# Clone and install dependencies
+git clone https://github.com/Flo976/mdparadise.git
+cd mdparadise/frontend
+npm install
 ```
 
-### Running the Server
+### Build and Install CLI
+
+**Linux/macOS:**
 ```bash
-# If installed globally
-mdparadise                    # Launch in current directory
-mdparadise /path/to/folder   # Launch in specific directory
-
-# Without installation
-./start_md_server.sh          # Launch in current directory
-./start_md_server.sh /path   # Launch in specific directory
-
-# Direct execution (requires manual venv activation)
-python3 md_server.py          # Launch in current directory
+# From project root
+./build-cli.sh        # Cleans .next, runs npm build
+cd frontend
+npm link              # Makes 'mdparadise' command available globally
 ```
+
+**Windows:**
+```powershell
+.\build-cli.ps1       # Cleans .next, runs npm install + build
+cd frontend
+npm link
+```
+
+Note: `build-cli.sh` uses sudo to remove .next directory due to permission issues.
 
 ### Development Mode
-The Flask server runs with `debug=True` by default (line 648). This enables:
-- Auto-reload on code changes
-- Detailed error pages
-- Interactive debugger
 
-## File Dependencies
+```bash
+cd frontend
+npm run dev                                          # Starts dev server on port 3000
+MDPARADISE_BASE_DIR=~/Documents/notes npm run dev   # Custom base directory
+```
 
-**Python dependencies** (md_server_requirements.txt):
-- Flask==3.0.0 - Web framework
-- flask-cors==4.0.0 - CORS support
-- markdown==3.5.1 - Server-side markdown rendering with extensions
+### Launch CLI
 
-**Frontend dependencies** (loaded via CDN in HTML_TEMPLATE):
-- github-markdown-css - GitHub-style markdown rendering
-- CodeMirror 5.65.16 - Code editor
-- marked.js 11.1.1 - Client-side markdown parser
+```bash
+mdparadise                    # Launch in current directory
+mdparadise ~/path/to/notes    # Launch in specific directory
+mdparadise --port 3000        # Custom port
+mdparadise --no-open          # Don't auto-open browser
+```
 
-## Network Configuration
+### Uninstall
 
-- Server binds to `0.0.0.0` (all interfaces) on port 4444
-- Accessible locally at `http://localhost:4444`
-- Accessible on LAN via local IP (displayed on startup)
-- Uses socket connection to 8.8.8.8:80 to detect local IP address (md_server.py:23-32)
-
-## Markdown Extensions
-
-Server-side rendering uses these Python-Markdown extensions (md_server.py:87-94):
-- `fenced_code` - Code blocks with syntax highlighting
-- `tables` - GitHub-style tables
-- `toc` - Table of contents
-- `nl2br` - Newlines to breaks
-- `codehilite` - Syntax highlighting
-- `extra` - Collection of extra extensions
+```bash
+cd frontend
+npm unlink
+```
 
 ## Important Implementation Details
 
-### File Discovery
-The `get_all_markdown_files()` function (lines 34-52):
-- Recursively walks directory tree from BASE_DIR
-- Excludes hidden and dependency directories
-- Returns sorted list with file metadata (name, path, directory, size)
+### Port Detection
 
-### Virtual Environment
-The project uses a Python virtual environment for isolation:
-- Created in `venv/` directory within project root
-- start_md_server.sh resolves symlinks to find correct venv path
-- venv directory is owned by root (visible in git status output) - you may need sudo to modify
+The CLI automatically finds available ports by testing from 4445 upward. This allows multiple instances to run simultaneously without port conflicts. See `findAvailablePort()` in bin/mdparadise.js:52-64.
 
-### Editor Integration
-CodeMirror initialization (HTML_TEMPLATE lines 441-461):
-- Theme: dracula
-- Mode: markdown
-- Line numbers enabled
-- Keyboard shortcuts: Ctrl-S/Cmd-S for save
-- Auto-updates preview on change
+### Security Model
+
+- Path traversal protection in API routes via `isPathSafe()` check
+- Only allows access to files within `MDPARADISE_BASE_DIR` and subdirectories
+- Returns 403 Forbidden for paths outside base directory
+
+### State Persistence
+
+The application saves editor state to localStorage (lib/persistence.ts):
+- Last opened file path
+- View mode (both/editor/preview)
+- WYSIWYG edit state
+- Base directory (to ensure state is only restored for same directory)
+
+State is restored once on app load if the base directory matches.
+
+### Mobile Responsiveness
+
+The UI detects viewport width < 768px and switches to mobile mode:
+- Forces preview-only view (no editor)
+- Sidebar becomes a slide-in Sheet
+- Hides desktop-only controls (save button, view toggle, edit preview button)
+
+### File Auto-Refresh
+
+The file list auto-refreshes every 5 seconds to detect new files without requiring page reload (editor-layout.tsx:86-92).
+
+### Keyboard Shortcuts
+
+- **Ctrl+S / Cmd+S**: Save current file
+- **Ctrl+F / Cmd+F**: Search in editor (CodeMirror built-in)
+
+### WYSIWYG Editor
+
+When "Edit Preview" is clicked, the preview becomes contenteditable. Changes are converted back to markdown via:
+- Headings: Parse text content and leading # characters
+- Lists: Detect ul/ol structure and convert to - or 1. syntax
+- Bold/italic: Convert <strong>/<em> tags to **/** markdown
+- Links: Convert <a> tags to [text](url)
+- Code blocks: Preserve <pre><code> as triple backticks
+
+## Platform-Specific Considerations
+
+### Windows
+
+- Uses `next.cmd` instead of `next` command
+- Requires `shell: true` option when spawning processes
+- PowerShell execution policy may block scripts (see WINDOWS.md)
+- npm link may require Administrator privileges
+- See WINDOWS.md for detailed troubleshooting
+
+### Linux/macOS
+
+- Uses bash scripts with proper shebang
+- May require sudo for .next directory cleanup due to file permissions
+
+## Build Process
+
+The build scripts (build-cli.sh, build-cli.ps1) perform these steps:
+1. Clean .next directory (removes cached build artifacts)
+2. Run `npm run build` (creates production build)
+3. Instruct user to run `npm link` to install globally
+
+The `npm link` command:
+- Creates a symlink in global node_modules
+- Makes the `mdparadise` command available system-wide
+- Points to the bin/mdparadise.js entry point
 
 ## MCP Configuration
 

@@ -35,7 +35,7 @@ export function WysiwygEditor({ value, onChange }: WysiwygEditorProps) {
                 <svg class="check-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span class="copy-text">Copy</span>
+                <span class="copy-text">Copier</span>
               </button>
             </div>
             <pre class="code-block"><code class="language-${language}">${escapedCode}</code></pre>
@@ -113,28 +113,50 @@ export function WysiwygEditor({ value, onChange }: WysiwygEditorProps) {
           textarea.innerHTML = code;
           const decodedCode = textarea.value;
 
-          // Copy to clipboard
-          navigator.clipboard.writeText(decodedCode).then(() => {
-            // Show success feedback
-            const copyIcon = button.querySelector('.copy-icon');
-            const checkIcon = button.querySelector('.check-icon');
-            const copyText = button.querySelector('.copy-text');
+          // Copy to clipboard with fallback
+          const copyToClipboard = async () => {
+            try {
+              // Try modern clipboard API
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(decodedCode);
+              } else {
+                // Fallback for older browsers or insecure contexts
+                const textArea = document.createElement('textarea');
+                textArea.value = decodedCode;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+              }
 
-            if (copyIcon && checkIcon && copyText) {
-              copyIcon.classList.add('hidden');
-              checkIcon.classList.remove('hidden');
-              copyText.textContent = 'Copied!';
+              // Show success feedback
+              const copyIcon = button.querySelector('.copy-icon');
+              const checkIcon = button.querySelector('.check-icon');
+              const copyText = button.querySelector('.copy-text');
 
-              // Reset after 2 seconds
-              setTimeout(() => {
-                copyIcon.classList.remove('hidden');
-                checkIcon.classList.add('hidden');
-                copyText.textContent = 'Copy';
-              }, 2000);
+              if (copyIcon && checkIcon && copyText) {
+                copyIcon.classList.add('hidden');
+                checkIcon.classList.remove('hidden');
+                copyText.textContent = 'Copié !';
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                  copyIcon.classList.remove('hidden');
+                  checkIcon.classList.add('hidden');
+                  copyText.textContent = 'Copier';
+                }, 2000);
+              }
+            } catch (err) {
+              console.error('Failed to copy code:', err);
+              alert('Impossible de copier le code dans le presse-papiers');
             }
-          }).catch(err => {
-            console.error('Failed to copy code:', err);
-          });
+          };
+
+          copyToClipboard();
         }
       }
     };

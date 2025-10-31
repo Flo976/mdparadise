@@ -105,3 +105,135 @@ export async function POST(
     );
   }
 }
+
+// DELETE - Supprimer un fichier
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ filepath: string[] }> }
+) {
+  try {
+    const baseDir = process.env.MDPARADISE_BASE_DIR || process.cwd();
+    const resolvedParams = await params;
+    const filepath = resolvedParams.filepath.join('/');
+    const fullPath = path.join(baseDir, filepath);
+
+    // Vérification de sécurité
+    if (!isPathSafe(baseDir, filepath)) {
+      return NextResponse.json(
+        { success: false, error: 'Accès refusé' },
+        { status: 403 }
+      );
+    }
+
+    // Vérifier que le fichier existe
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Fichier introuvable' },
+        { status: 404 }
+      );
+    }
+
+    // Supprimer le fichier
+    await fs.unlink(fullPath);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Fichier supprimé avec succès',
+    });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Renommer un fichier
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ filepath: string[] }> }
+) {
+  try {
+    const baseDir = process.env.MDPARADISE_BASE_DIR || process.cwd();
+    const resolvedParams = await params;
+    const filepath = resolvedParams.filepath.join('/');
+    const fullPath = path.join(baseDir, filepath);
+
+    // Vérification de sécurité
+    if (!isPathSafe(baseDir, filepath)) {
+      return NextResponse.json(
+        { success: false, error: 'Accès refusé' },
+        { status: 403 }
+      );
+    }
+
+    // Récupérer le nouveau nom depuis le body
+    const body = await request.json();
+    const newName = body.newName;
+
+    if (!newName) {
+      return NextResponse.json(
+        { success: false, error: 'Nouveau nom manquant' },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que le fichier existe
+    try {
+      await fs.access(fullPath);
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Fichier introuvable' },
+        { status: 404 }
+      );
+    }
+
+    // Construire le nouveau chemin
+    const dirPath = path.dirname(fullPath);
+    const newPath = path.join(dirPath, newName);
+
+    // Vérification de sécurité pour le nouveau chemin
+    const newRelativePath = path.relative(baseDir, newPath);
+    if (!isPathSafe(baseDir, newRelativePath)) {
+      return NextResponse.json(
+        { success: false, error: 'Accès refusé' },
+        { status: 403 }
+      );
+    }
+
+    // Vérifier que le nouveau nom n'existe pas déjà
+    try {
+      await fs.access(newPath);
+      return NextResponse.json(
+        { success: false, error: 'Un fichier avec ce nom existe déjà' },
+        { status: 409 }
+      );
+    } catch {
+      // Le fichier n'existe pas, on peut continuer
+    }
+
+    // Renommer le fichier
+    await fs.rename(fullPath, newPath);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Fichier renommé avec succès',
+      newPath: newRelativePath,
+    });
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
+      },
+      { status: 500 }
+    );
+  }
+}

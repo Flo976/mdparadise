@@ -1,10 +1,17 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { FileText, Folder, Search, Clock } from "lucide-react";
+import { FileText, Folder, Search, Clock, Edit2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -23,10 +30,14 @@ interface FileSidebarProps {
   currentFile: string | null;
   onFileSelect: (filepath: string) => void;
   baseDir: string;
+  onFileRename: (filepath: string, newName: string) => void;
+  onFileDelete: (filepath: string) => void;
 }
 
-export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileSidebarProps) {
+export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete }: FileSidebarProps) {
   const [search, setSearch] = useState("");
+  const [renamingFile, setRenamingFile] = useState<string | null>(null);
+  const [newFileName, setNewFileName] = useState("");
 
   const filteredFiles = useMemo(() => {
     if (!search) return files;
@@ -47,37 +58,19 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileS
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="MDParadise" className="h-8 w-8" />
-            <h2 className="text-lg font-semibold">MDParadise</h2>
-          </div>
-          <p className="text-xs text-muted-foreground truncate" title={baseDir}>
-            {baseDir}
-          </p>
+        <div className="flex items-center justify-center">
+          <img src="/logo.png" alt="MDParadise" className="h-[120px] w-[120px]" />
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2">
-            <div className="relative w-full">
-              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search files..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 h-9"
-              />
-            </div>
-          </SidebarGroupLabel>
 
           {/* Recent Files Section */}
           {!search && recentFiles.length > 0 && (
             <div className="px-4 py-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
                 <Clock className="h-3 w-3" />
-                Recent Files
+                Fichiers récents
               </div>
               <div className="space-y-1">
                 {recentFiles.map((file) => (
@@ -104,32 +97,78 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileS
               <SidebarMenu>
                 {filteredFiles.length === 0 ? (
                   <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    {search ? "No files found" : "No markdown files"}
+                    {search ? "Aucun fichier trouvé" : "Aucun fichier markdown"}
                   </div>
                 ) : (
                   filteredFiles.map((file) => (
                     <SidebarMenuItem key={file.path}>
-                      <SidebarMenuButton
-                        onClick={() => onFileSelect(file.path)}
-                        isActive={currentFile === file.path}
-                        className="w-full"
-                      >
-                        <FileText className="h-4 w-4" />
-                        <div className="flex flex-col items-start flex-1 min-w-0">
-                          <span className="font-medium truncate w-full">
-                            {file.name}
-                          </span>
-                          {file.dir !== "." && (
-                            <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
-                              <Folder className="h-3 w-3" />
-                              {file.dir}
-                            </span>
-                          )}
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {formatFileSize(file.size)}
-                        </Badge>
-                      </SidebarMenuButton>
+                      <ContextMenu>
+                        <ContextMenuTrigger asChild>
+                          <SidebarMenuButton
+                            onClick={() => onFileSelect(file.path)}
+                            isActive={currentFile === file.path}
+                            className="w-full"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <div className="flex flex-col items-start flex-1 min-w-0">
+                              {renamingFile === file.path ? (
+                                <Input
+                                  value={newFileName}
+                                  onChange={(e) => setNewFileName(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      onFileRename(file.path, newFileName);
+                                      setRenamingFile(null);
+                                    } else if (e.key === 'Escape') {
+                                      setRenamingFile(null);
+                                    }
+                                  }}
+                                  onBlur={() => setRenamingFile(null)}
+                                  autoFocus
+                                  className="h-6 text-sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              ) : (
+                                <span className="font-medium truncate w-full">
+                                  {file.name}
+                                </span>
+                              )}
+                              {file.dir !== "." && (
+                                <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
+                                  <Folder className="h-3 w-3" />
+                                  {file.dir}
+                                </span>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {formatFileSize(file.size)}
+                            </Badge>
+                          </SidebarMenuButton>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent className="w-48">
+                          <ContextMenuItem
+                            onClick={() => {
+                              setRenamingFile(file.path);
+                              setNewFileName(file.name);
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Renommer
+                          </ContextMenuItem>
+                          <ContextMenuSeparator />
+                          <ContextMenuItem
+                            onClick={() => {
+                              if (confirm(`Êtes-vous sûr de vouloir supprimer "${file.name}" ?`)) {
+                                onFileDelete(file.path);
+                              }
+                            }}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
                     </SidebarMenuItem>
                   ))
                 )}

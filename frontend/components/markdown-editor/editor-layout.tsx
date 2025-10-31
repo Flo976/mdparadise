@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Menu, Save, Eye, EyeOff, Code, Edit3 } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import {
   SidebarInset,
@@ -41,8 +42,34 @@ export function EditorLayout() {
   const [isRestoringState, setIsRestoringState] = useState(false);
   const [hasRestoredOnce, setHasRestoredOnce] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const hasUnsavedChanges = content !== originalContent;
+
+  // Filter files based on search
+  const filteredFiles = useMemo(() => {
+    if (!search) return [];
+    const searchLower = search.toLowerCase();
+    return files.filter(
+      (file) =>
+        file.name.toLowerCase().includes(searchLower) ||
+        file.path.toLowerCase().includes(searchLower)
+    );
+  }, [files, search]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Detect mobile viewport
   useEffect(() => {
@@ -100,7 +127,7 @@ export function EditorLayout() {
 
     if (hasUnsavedChanges) {
       const confirmed = window.confirm(
-        "You have unsaved changes. Do you want to continue?"
+        "Vous avez des modifications non enregistrées. Voulez-vous continuer ?"
       );
       if (!confirmed) return;
     }
@@ -128,11 +155,11 @@ export function EditorLayout() {
       if (response.success) {
         setOriginalContent(content);
       } else {
-        alert("Error: " + response.error);
+        alert("Erreur : " + response.error);
       }
     } catch (error) {
       console.error("Failed to save file:", error);
-      alert("Failed to save file");
+      alert("Échec de l'enregistrement du fichier");
     } finally {
       setSaving(false);
     }
@@ -208,10 +235,52 @@ export function EditorLayout() {
     });
   };
 
+  // Handle file rename
+  const handleFileRename = useCallback(async (filepath: string, newName: string) => {
+    try {
+      const response = await apiClient.renameFile(filepath, newName);
+      if (response.success) {
+        // Reload files list
+        await loadFiles();
+        // If the renamed file is the current file, update the current file path
+        if (currentFile === filepath && response.newPath) {
+          setCurrentFile(response.newPath);
+        }
+      } else {
+        alert("Erreur : " + response.error);
+      }
+    } catch (error) {
+      console.error("Failed to rename file:", error);
+      alert("Échec du renommage du fichier");
+    }
+  }, [currentFile, loadFiles]);
+
+  // Handle file delete
+  const handleFileDelete = useCallback(async (filepath: string) => {
+    try {
+      const response = await apiClient.deleteFile(filepath);
+      if (response.success) {
+        // Reload files list
+        await loadFiles();
+        // If the deleted file is the current file, clear it
+        if (currentFile === filepath) {
+          setCurrentFile(null);
+          setContent("");
+          setOriginalContent("");
+        }
+      } else {
+        alert("Erreur : " + response.error);
+      }
+    } catch (error) {
+      console.error("Failed to delete file:", error);
+      alert("Échec de la suppression du fichier");
+    }
+  }, [currentFile, loadFiles]);
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">Chargement...</div>
       </div>
     );
   }
@@ -225,6 +294,8 @@ export function EditorLayout() {
           currentFile={currentFile}
           onFileSelect={handleFileSelect}
           baseDir={baseDir}
+          onFileRename={handleFileRename}
+          onFileDelete={handleFileDelete}
         />
       </div>
 
@@ -237,6 +308,8 @@ export function EditorLayout() {
             currentFile={currentFile}
             onFileSelect={handleFileSelect}
             baseDir={baseDir}
+            onFileRename={handleFileRename}
+            onFileDelete={handleFileDelete}
           />
         </SheetContent>
       </Sheet>
@@ -257,23 +330,101 @@ export function EditorLayout() {
           </Sheet>
           <SidebarTrigger className="hidden md:flex" />
           <Separator orientation="vertical" className="h-6 hidden md:block" />
-          <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2 min-w-0">
-            {!currentFile && (
-              <span className="text-lg font-bold md:hidden">MDParadise</span>
-            )}
+
+          {/* Search bar - centered */}
+          <div className="flex-1 flex justify-center items-center px-4" ref={searchRef}>
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Rechercher des fichiers..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowSearchResults(true);
+                }}
+                onFocus={() => setShowSearchResults(true)}
+                className="pl-9 pr-9 h-9"
+              />
+              {search && (
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setShowSearchResults(false);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+
+              {/* Search results dropdown */}
+              {showSearchResults && search && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg z-50 max-h-[400px] overflow-y-auto">
+                  {filteredFiles.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      Aucun fichier trouvé
+                    </div>
+                  ) : (
+                    <div className="py-2">
+                      {filteredFiles.map((file) => (
+                        <button
+                          key={file.path}
+                          onClick={() => {
+                            handleFileSelect(file.path);
+                            setSearch("");
+                            setShowSearchResults(false);
+                          }}
+                          className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
+                        >
+                          <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate text-sm">{file.name}</div>
+                            {file.dir !== "." && (
+                              <div className="text-xs text-muted-foreground truncate">{file.dir}</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* File info and status */}
+          <div className="flex items-center gap-2">
             {currentFile && (
               <>
-                <span className="font-semibold truncate text-sm sm:text-base">
-                  {currentFile}
-                </span>
-                {!isMobile && (
-                  <Badge variant={hasUnsavedChanges ? "destructive" : "secondary"} className="text-xs">
-                    {saving ? "Saving..." : hasUnsavedChanges ? "Unsaved" : "Saved"}
-                  </Badge>
-                )}
+                <div className="hidden lg:flex flex-col items-end">
+                  <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={baseDir}>
+                    {baseDir}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold truncate text-sm max-w-[200px]">
+                      {currentFile}
+                    </span>
+                    {!isMobile && (
+                      <Badge variant={hasUnsavedChanges ? "destructive" : "secondary"} className="text-xs">
+                        {saving ? "Enregistrement..." : hasUnsavedChanges ? "Non enregistré" : "Enregistré"}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {/* Mobile/tablet: show only badge */}
+                <div className="lg:hidden">
+                  {!isMobile && (
+                    <Badge variant={hasUnsavedChanges ? "destructive" : "secondary"} className="text-xs">
+                      {saving ? "Enregistrement..." : hasUnsavedChanges ? "Non enregistré" : "Enregistré"}
+                    </Badge>
+                  )}
+                </div>
               </>
             )}
           </div>
+
+          <Separator orientation="vertical" className="h-6 hidden md:block" />
 
           {/* Desktop-only controls */}
           {!isMobile && (
@@ -286,7 +437,7 @@ export function EditorLayout() {
                   onClick={() => setIsPreviewEditable(!isPreviewEditable)}
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
-                  {isPreviewEditable ? "Read Only" : "Edit Preview"}
+                  {isPreviewEditable ? "Lecture seule" : "Éditer l'aperçu"}
                 </Button>
               )}
 
@@ -299,19 +450,19 @@ export function EditorLayout() {
                 {viewMode === "both" && (
                   <>
                     <Eye className="h-4 w-4 mr-2" />
-                    Preview Only
+                    Aperçu seul
                   </>
                 )}
                 {viewMode === "preview" && (
                   <>
                     <Code className="h-4 w-4 mr-2" />
-                    Editor Only
+                    Éditeur seul
                   </>
                 )}
                 {viewMode === "editor" && (
                   <>
                     <EyeOff className="h-4 w-4 mr-2" />
-                    Show Both
+                    Afficher les deux
                   </>
                 )}
               </Button>
@@ -323,7 +474,7 @@ export function EditorLayout() {
                 size="sm"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save
+                Enregistrer
               </Button>
             </div>
           )}
@@ -335,7 +486,7 @@ export function EditorLayout() {
             <div className="flex h-full items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <p className="text-4xl mb-4">📝</p>
-                <p className="text-lg">Select a file to start editing</p>
+                <p className="text-lg">Sélectionnez un fichier pour commencer l'édition</p>
               </div>
             </div>
           ) : (
