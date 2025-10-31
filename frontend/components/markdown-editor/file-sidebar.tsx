@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { FileText, Folder, Search, Clock } from "lucide-react";
+import { FileText, Folder, Search, Clock, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -12,21 +11,34 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { FileContextMenu } from "./file-context-menu";
+import { FileTree } from "./file-tree";
+import { apiClient } from "@/lib/api/client";
+import { buildFileTree } from "@/lib/tree-utils";
 import type { MarkdownFile } from "@/types";
 
 interface FileSidebarProps {
   files: MarkdownFile[];
   currentFile: string | null;
   onFileSelect: (filepath: string) => void;
+  onRefresh: () => void;
   baseDir: string;
 }
 
-export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileSidebarProps) {
+export function FileSidebar({ files, currentFile, onFileSelect, onRefresh, baseDir }: FileSidebarProps) {
   const [search, setSearch] = useState("");
+
+  // CRUD Handlers
+  const handleCreateFile = async (filepath: string) => {
+    await apiClient.createFile(filepath, "# New File\n\nStart writing...");
+    onRefresh();
+  };
+
+  const handleCreateFolder = async (folderpath: string) => {
+    await apiClient.createFolder(folderpath);
+    onRefresh();
+  };
 
   const filteredFiles = useMemo(() => {
     if (!search) return files;
@@ -44,6 +56,43 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileS
       .slice(0, 3);
   }, [files]);
 
+  const fileTree = useMemo(() => {
+    return buildFileTree(search ? filteredFiles : files);
+  }, [files, filteredFiles, search]);
+
+  // Get current file info for breadcrumb
+  const currentFileInfo = useMemo(() => {
+    if (!currentFile) return null;
+    return files.find(f => f.path === currentFile);
+  }, [currentFile, files]);
+
+  // Unified handlers for both file and folder operations
+  const handleRename = async (oldPath: string, newPath: string) => {
+    const isFolder = !oldPath.includes('.md') || files.some(f => f.path.startsWith(oldPath + '/'));
+    if (isFolder) {
+      await apiClient.renameFolder(oldPath, newPath);
+    } else {
+      await apiClient.renameFile(oldPath, newPath);
+    }
+    if (currentFile === oldPath) {
+      onFileSelect(newPath);
+    }
+    onRefresh();
+  };
+
+  const handleDelete = async (path: string) => {
+    const isFolder = !path.includes('.md') || files.some(f => f.path.startsWith(path + '/'));
+    if (isFolder) {
+      await apiClient.deleteFolder(path);
+    } else {
+      await apiClient.deleteFile(path);
+    }
+    if (currentFile === path) {
+      onFileSelect("");
+    }
+    onRefresh();
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b px-4 py-3">
@@ -55,6 +104,21 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileS
           <p className="text-xs text-muted-foreground truncate" title={baseDir}>
             {baseDir}
           </p>
+
+          {/* Breadcrumb for current file */}
+          {currentFileInfo && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground bg-accent/50 rounded-md px-2 py-1.5">
+              {currentFileInfo.dir !== "." && (
+                <>
+                  <Folder className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{currentFileInfo.dir}</span>
+                  <ChevronRight className="h-3 w-3 flex-shrink-0" />
+                </>
+              )}
+              <FileText className="h-3 w-3 flex-shrink-0" />
+              <span className="font-medium truncate">{currentFileInfo.name}</span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -100,50 +164,28 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir }: FileS
           )}
 
           <SidebarGroupContent>
-            <ScrollArea className="h-[calc(100vh-180px)]">
-              <SidebarMenu>
-                {filteredFiles.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    {search ? "No files found" : "No markdown files"}
-                  </div>
-                ) : (
-                  filteredFiles.map((file) => (
-                    <SidebarMenuItem key={file.path}>
-                      <SidebarMenuButton
-                        onClick={() => onFileSelect(file.path)}
-                        isActive={currentFile === file.path}
-                        className="w-full"
-                      >
-                        <FileText className="h-4 w-4" />
-                        <div className="flex flex-col items-start flex-1 min-w-0">
-                          <span className="font-medium truncate w-full">
-                            {file.name}
-                          </span>
-                          {file.dir !== "." && (
-                            <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
-                              <Folder className="h-3 w-3" />
-                              {file.dir}
-                            </span>
-                          )}
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {formatFileSize(file.size)}
-                        </Badge>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))
-                )}
-              </SidebarMenu>
+            <ScrollArea className="h-[calc(100vh-250px)]">
+              {filteredFiles.length === 0 ? (
+                <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  {search ? "No files found" : "No markdown files"}
+                </div>
+              ) : (
+                <div className="px-2 py-2">
+                  <FileTree
+                    nodes={fileTree}
+                    currentFile={currentFile}
+                    onFileSelect={onFileSelect}
+                    onRename={handleRename}
+                    onDelete={handleDelete}
+                    onCreateFile={handleCreateFile}
+                    onCreateFolder={handleCreateFolder}
+                  />
+                </div>
+              )}
             </ScrollArea>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }

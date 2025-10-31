@@ -26,3 +26,69 @@ export interface SaveFileResponse {
   message?: string;
   error?: string;
 }
+
+// ==================== File Operations ====================
+
+export interface CreateFileRequest {
+  path: string;
+  content?: string;
+}
+
+export interface RenameFileRequest {
+  oldPath: string;
+  newPath: string;
+}
+
+export interface DeleteFileRequest {
+  path: string;
+}
+
+export interface FileOperationResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  newPath?: string;
+}
+
+// ==================== Folder Operations ====================
+
+export interface CreateFolderRequest {
+  path: string;
+}
+
+export interface RenameFolderRequest {
+  oldPath: string;
+  newPath: string;
+}
+
+export interface DeleteFolderRequest {
+  path: string;
+}
+
+export interface FolderOperationResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  newPath?: string;
+  filesDeleted?: number;
+  foldersDeleted?: number;
+}
+
+export interface FolderInfo {
+  path: string;
+  name: string;
+  filesCount: number;
+  foldersCount: number;
+}
+
+// ==================== Common Types ====================
+
+export type FileOrFolderType = 'file' | 'folder';
+
+export interface FileSystemItem {
+  name: string;
+  path: string;
+  type: FileOrFolderType;
+  size?: number;
+  mtime?: number;
+}

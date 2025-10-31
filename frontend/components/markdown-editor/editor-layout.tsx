@@ -16,7 +16,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { FileSidebar } from "./file-sidebar";
+import { EnhancedSidebar } from "./enhanced-sidebar/EnhancedSidebar";
 import { FileListContent } from "./file-list-content";
 import { MarkdownEditor } from "./editor";
 import { MarkdownPreview } from "./preview";
@@ -220,10 +220,11 @@ export function EditorLayout() {
     <SidebarProvider>
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <FileSidebar
+        <EnhancedSidebar
           files={files}
           currentFile={currentFile}
           onFileSelect={handleFileSelect}
+          onRefresh={loadFiles}
           baseDir={baseDir}
         />
       </div>
