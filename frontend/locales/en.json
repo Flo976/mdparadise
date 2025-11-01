@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "unsaved": "Unsaved",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "rename": "Rename",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "search": "Search",
+    "file": "File",
+    "folder": "Folder",
+    "close": "Close"
+  },
+  "editor": {
+    "selectFile": "Select a file to start editing",
+    "welcome": "Welcome to MDParadise",
+    "viewBoth": "Show both",
+    "viewEditorOnly": "Editor only",
+    "viewPreviewOnly": "Preview only",
+    "editPreview": "Edit preview",
+    "readOnly": "Read only",
+    "markdownize": "Markdownize",
+    "markdownizeTitle": "Paste formatted text and convert it to markdown",
+    "unsavedChanges": "You have unsaved changes. Do you want to continue?"
+  },
+  "files": {
+    "recentFiles": "Recent files",
+    "noFiles": "No markdown files",
+    "noFilesFound": "No files found",
+    "newFile": "Create a new file",
+    "newFileDescription": "Enter the name of the new markdown file. The .md extension will be added automatically if necessary.",
+    "newFileNamePlaceholder": "my-file",
+    "newFolder": "Create a new folder",
+    "newFolderDescription": "Enter the name of the new folder.",
+    "newFolderNamePlaceholder": "my-folder",
+    "deleteConfirm": "Are you sure you want to delete \"{name}\"?",
+    "treeView": "Tree view",
+    "listView": "List view",
+    "copyPath": "Copy file path"
+  },
+  "search": {
+    "searchFiles": "Search files...",
+    "fileNames": "File names",
+    "fileContent": "File content",
+    "searching": "Searching...",
+    "noResults": "No results found",
+    "noResultsInContent": "No results in content",
+    "minCharacters": "Enter at least 2 characters to search",
+    "otherMatches": "+{count} other match(es)",
+    "line": "line"
+  },
+  "errors": {
+    "saveFailed": "Failed to save file",
+    "loadFailed": "Failed to load file",
+    "renameFailed": "Failed to rename file",
+    "deleteFailed": "Failed to delete file",
+    "createFailed": "Failed to create file",
+    "createFolderFailed": "Failed to create folder",
+    "moveFailed": "Failed to move file",
+    "copyFailed": "Failed to copy to clipboard",
+    "clipboardEmpty": "No text detected in clipboard",
+    "clipboardPrompt": "Paste your text to format here:"
+  },
+  "preview": {
+    "copyCode": "Copy",
+    "copyCodeSuccess": "Copied!"
+  }
+}

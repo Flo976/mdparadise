@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { FileText, Folder, Search, Clock, Edit2, Trash2, FilePlus, FolderPlus, List, TreePine } from "lucide-react";
+import { useTranslations } from "@/lib/i18n/provider";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -43,6 +44,7 @@ interface FileListContentProps {
 }
 
 export function FileListContent({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete, onFileCreate, onFolderCreate, onFileMove }: FileListContentProps) {
+  const t = useTranslations();
   const [search, setSearch] = useState("");
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState("");
@@ -69,7 +71,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
   }, [files]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#FDFDF7' }}>
       {/* Header */}
       <div className="border-b px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-center">
@@ -89,7 +91,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
           }}
         >
           <FilePlus className="h-4 w-4 mr-2" />
-          Fichier
+          {t('common.file')}
         </Button>
 
         <Button
@@ -102,7 +104,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
           }}
         >
           <FolderPlus className="h-4 w-4 mr-2" />
-          Dossier
+          {t('common.folder')}
         </Button>
 
         <TooltipProvider>
@@ -121,7 +123,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{viewMode === "tree" ? "Vue liste" : "Vue arborescence"}</p>
+              <p>{viewMode === "tree" ? t('files.listView') : t('files.treeView')}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -133,22 +135,30 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
         <div className="px-4 py-2 flex-shrink-0">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
             <Clock className="h-3 w-3" />
-            Fichiers récents
+            {t('files.recentFiles')}
           </div>
           <div className="space-y-1">
             {recentFiles.map((file) => (
-              <button
-                key={file.path}
-                onClick={() => onFileSelect(file.path)}
-                className={`w-full text-left px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors ${
-                  currentFile === file.path ? 'bg-accent' : ''
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">{file.name}</span>
-                </div>
-              </button>
+              <TooltipProvider key={file.path} delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => onFileSelect(file.path)}
+                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-accent transition-colors ${
+                        currentFile === file.path ? 'bg-accent' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{file.name}</span>
+                      </div>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p className="max-w-xs break-all">{file.path}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ))}
           </div>
           <div className="h-px bg-border my-2" />
@@ -170,55 +180,64 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
           <div className="space-y-1 py-2">
             {filteredFiles.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                {search ? "Aucun fichier trouvé" : "Aucun fichier markdown"}
+                {search ? t('files.noFilesFound') : t('files.noFiles')}
               </div>
             ) : (
               filteredFiles.map((file) => (
                 <ContextMenu key={file.path}>
                   <ContextMenuTrigger asChild>
-                    <button
-                      onClick={() => onFileSelect(file.path)}
-                      className={`w-full text-left px-3 py-2 rounded-md transition-colors hover:bg-accent ${
-                        currentFile === file.path ? 'bg-accent' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-4 w-4 flex-shrink-0" />
-                        <div className="flex flex-col items-start flex-1 min-w-0">
-                          {renamingFile === file.path ? (
-                            <Input
-                              value={newFileName}
-                              onChange={(e) => setNewFileName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  onFileRename(file.path, newFileName);
-                                  setRenamingFile(null);
-                                } else if (e.key === 'Escape') {
-                                  setRenamingFile(null);
-                                }
-                              }}
-                              onBlur={() => setRenamingFile(null)}
-                              autoFocus
-                              className="h-6 text-sm"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            <span className="font-medium truncate w-full text-sm">
-                              {file.name}
-                            </span>
-                          )}
-                          {file.dir !== "." && (
-                            <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
-                              <Folder className="h-3 w-3" />
-                              {file.dir}
-                            </span>
-                          )}
-                        </div>
-                        <Badge variant="secondary" className="text-xs flex-shrink-0">
-                          {formatFileSize(file.size)}
-                        </Badge>
-                      </div>
-                    </button>
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => onFileSelect(file.path)}
+                            className={`w-full text-left px-3 py-2 rounded-md transition-colors hover:bg-accent ${
+                              currentFile === file.path ? 'bg-accent' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-4 w-4 flex-shrink-0" />
+                              <div className="flex flex-col items-start flex-1 min-w-0">
+                                {renamingFile === file.path ? (
+                                  <Input
+                                    value={newFileName}
+                                    onChange={(e) => setNewFileName(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        onFileRename(file.path, newFileName);
+                                        setRenamingFile(null);
+                                      } else if (e.key === 'Escape') {
+                                        setRenamingFile(null);
+                                      }
+                                    }}
+                                    onBlur={() => setRenamingFile(null)}
+                                    autoFocus
+                                    className="h-6 text-xs"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                ) : (
+                                  <span className="font-medium truncate w-full text-xs">
+                                    {file.name}
+                                  </span>
+                                )}
+                                {file.dir !== "." && (
+                                  <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
+                                    <Folder className="h-3 w-3" />
+                                    {file.dir}
+                                  </span>
+                                )}
+                              </div>
+                              <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                {formatFileSize(file.size)}
+                              </Badge>
+                            </div>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p className="max-w-xs break-all">{file.path}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </ContextMenuTrigger>
                   <ContextMenuContent className="w-48">
                     <ContextMenuItem
@@ -228,19 +247,19 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
                       }}
                     >
                       <Edit2 className="h-4 w-4 mr-2" />
-                      Renommer
+                      {t('common.rename')}
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
                       onClick={() => {
-                        if (confirm(`Êtes-vous sûr de vouloir supprimer "${file.name}" ?`)) {
+                        if (confirm(t('files.deleteConfirm', { name: file.name }))) {
                           onFileDelete(file.path);
                         }
                       }}
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Supprimer
+                      {t('common.delete')}
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>
@@ -254,14 +273,14 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
       <Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer un nouveau fichier</DialogTitle>
+            <DialogTitle>{t('files.newFile')}</DialogTitle>
             <DialogDescription>
-              Entrez le nom du nouveau fichier markdown. L'extension .md sera ajoutée automatiquement si nécessaire.
+              {t('files.newFileDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
-              placeholder="mon-fichier"
+              placeholder={t('files.newFileNamePlaceholder')}
               value={newFileOrFolderName}
               onChange={(e) => setNewFileOrFolderName(e.target.value)}
               onKeyDown={(e) => {
@@ -283,7 +302,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
                 setNewFileOrFolderName("");
               }}
             >
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => {
@@ -296,7 +315,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
               }}
               disabled={!newFileOrFolderName.trim()}
             >
-              Créer
+              {t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -306,14 +325,14 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
       <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer un nouveau dossier</DialogTitle>
+            <DialogTitle>{t('files.newFolder')}</DialogTitle>
             <DialogDescription>
-              Entrez le nom du nouveau dossier.
+              {t('files.newFolderDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
-              placeholder="mon-dossier"
+              placeholder={t('files.newFolderNamePlaceholder')}
               value={newFileOrFolderName}
               onChange={(e) => setNewFileOrFolderName(e.target.value)}
               onKeyDown={(e) => {
@@ -334,7 +353,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
                 setNewFileOrFolderName("");
               }}
             >
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => {
@@ -346,7 +365,7 @@ export function FileListContent({ files, currentFile, onFileSelect, baseDir, onF
               }}
               disabled={!newFileOrFolderName.trim()}
             >
-              Créer
+              {t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>

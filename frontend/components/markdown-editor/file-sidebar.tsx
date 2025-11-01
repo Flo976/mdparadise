@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { FileText, Folder, Search, Clock, Edit2, Trash2, FilePlus, FolderPlus, List, TreePine } from "lucide-react";
+import { useTranslations } from "@/lib/i18n/provider";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { FileTreeView } from "./file-tree-view";
+import { InstanceSwitcher } from "./instance-switcher";
 import type { MarkdownFile } from "@/types";
 
 interface FileSidebarProps {
@@ -54,6 +56,7 @@ interface FileSidebarProps {
 }
 
 export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileRename, onFileDelete, onFileCreate, onFolderCreate, onFileMove }: FileSidebarProps) {
+  const t = useTranslations();
   const [search, setSearch] = useState("");
   const [renamingFile, setRenamingFile] = useState<string | null>(null);
   const [newFileName, setNewFileName] = useState("");
@@ -103,11 +106,11 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                     }}
                   >
                     <FilePlus className="h-4 w-4 mr-2" />
-                    Fichier
+                    {t('common.file')}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Créer un nouveau fichier markdown</p>
+                  <p>{t('files.newFile')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -125,11 +128,11 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                     }}
                   >
                     <FolderPlus className="h-4 w-4 mr-2" />
-                    Dossier
+                    {t('common.folder')}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Créer un nouveau dossier</p>
+                  <p>{t('files.newFolder')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -150,7 +153,7 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{viewMode === "tree" ? "Vue liste" : "Vue arborescence"}</p>
+                  <p>{viewMode === "tree" ? t('files.listView') : t('files.treeView')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -163,22 +166,30 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
             <div className="px-4 py-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
                 <Clock className="h-3 w-3" />
-                Fichiers récents
+                {t('files.recentFiles')}
               </div>
               <div className="space-y-1">
                 {recentFiles.map((file) => (
-                  <button
-                    key={file.path}
-                    onClick={() => onFileSelect(file.path)}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors ${
-                      currentFile === file.path ? 'bg-accent' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">{file.name}</span>
-                    </div>
-                  </button>
+                  <TooltipProvider key={file.path} delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => onFileSelect(file.path)}
+                          className={`w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-accent transition-colors ${
+                            currentFile === file.path ? 'bg-accent' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">{file.name}</span>
+                          </div>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p className="max-w-xs break-all">{file.path}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 ))}
               </div>
               <div className="h-px bg-border my-2" />
@@ -186,7 +197,7 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
           )}
 
           <SidebarGroupContent>
-            <ScrollArea className="h-[calc(100vh-180px)]">
+            <ScrollArea className="h-[calc(100vh-350px)]">
               {viewMode === "tree" ? (
                 <div className="px-2">
                   <FileTreeView
@@ -202,53 +213,62 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                 <SidebarMenu>
                   {filteredFiles.length === 0 ? (
                     <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      {search ? "Aucun fichier trouvé" : "Aucun fichier markdown"}
+                      {search ? t('files.noFilesFound') : t('files.noFiles')}
                     </div>
                   ) : (
                     filteredFiles.map((file) => (
                       <SidebarMenuItem key={file.path}>
                         <ContextMenu>
                           <ContextMenuTrigger asChild>
-                            <SidebarMenuButton
-                              onClick={() => onFileSelect(file.path)}
-                              isActive={currentFile === file.path}
-                              className="w-full"
-                            >
-                              <FileText className="h-4 w-4" />
-                              <div className="flex flex-col items-start flex-1 min-w-0">
-                                {renamingFile === file.path ? (
-                                  <Input
-                                    value={newFileName}
-                                    onChange={(e) => setNewFileName(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        onFileRename(file.path, newFileName);
-                                        setRenamingFile(null);
-                                      } else if (e.key === 'Escape') {
-                                        setRenamingFile(null);
-                                      }
-                                    }}
-                                    onBlur={() => setRenamingFile(null)}
-                                    autoFocus
-                                    className="h-6 text-sm"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                ) : (
-                                  <span className="font-medium truncate w-full">
-                                    {file.name}
-                                  </span>
-                                )}
-                                {file.dir !== "." && (
-                                  <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
-                                    <Folder className="h-3 w-3" />
-                                    {file.dir}
-                                  </span>
-                                )}
-                              </div>
-                              <Badge variant="secondary" className="text-xs">
-                                {formatFileSize(file.size)}
-                              </Badge>
-                            </SidebarMenuButton>
+                            <TooltipProvider delayDuration={300}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <SidebarMenuButton
+                                    onClick={() => onFileSelect(file.path)}
+                                    isActive={currentFile === file.path}
+                                    className="w-full"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                    <div className="flex flex-col items-start flex-1 min-w-0">
+                                      {renamingFile === file.path ? (
+                                        <Input
+                                          value={newFileName}
+                                          onChange={(e) => setNewFileName(e.target.value)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              onFileRename(file.path, newFileName);
+                                              setRenamingFile(null);
+                                            } else if (e.key === 'Escape') {
+                                              setRenamingFile(null);
+                                            }
+                                          }}
+                                          onBlur={() => setRenamingFile(null)}
+                                          autoFocus
+                                          className="h-6 text-xs"
+                                          onClick={(e) => e.stopPropagation()}
+                                        />
+                                      ) : (
+                                        <span className="font-medium truncate w-full text-xs">
+                                          {file.name}
+                                        </span>
+                                      )}
+                                      {file.dir !== "." && (
+                                        <span className="text-xs text-muted-foreground truncate w-full flex items-center gap-1">
+                                          <Folder className="h-3 w-3" />
+                                          {file.dir}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {formatFileSize(file.size)}
+                                    </Badge>
+                                  </SidebarMenuButton>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">
+                                  <p className="max-w-xs break-all">{file.path}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </ContextMenuTrigger>
                           <ContextMenuContent className="w-48">
                             <ContextMenuItem
@@ -258,19 +278,19 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                               }}
                             >
                               <Edit2 className="h-4 w-4 mr-2" />
-                              Renommer
+                              {t('common.rename')}
                             </ContextMenuItem>
                             <ContextMenuSeparator />
                             <ContextMenuItem
                               onClick={() => {
-                                if (confirm(`Êtes-vous sûr de vouloir supprimer "${file.name}" ?`)) {
+                                if (confirm(t('files.deleteConfirm', { name: file.name }))) {
                                   onFileDelete(file.path);
                                 }
                               }}
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Supprimer
+                              {t('common.delete')}
                             </ContextMenuItem>
                           </ContextMenuContent>
                         </ContextMenu>
@@ -282,20 +302,23 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
             </ScrollArea>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Instance Switcher Footer */}
+        <InstanceSwitcher />
       </SidebarContent>
 
       {/* Dialog for creating a new file */}
       <Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer un nouveau fichier</DialogTitle>
+            <DialogTitle>{t('files.newFile')}</DialogTitle>
             <DialogDescription>
-              Entrez le nom du nouveau fichier markdown. L'extension .md sera ajoutée automatiquement si nécessaire.
+              {t('files.newFileDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
-              placeholder="mon-fichier"
+              placeholder={t('files.newFileNamePlaceholder')}
               value={newFileOrFolderName}
               onChange={(e) => setNewFileOrFolderName(e.target.value)}
               onKeyDown={(e) => {
@@ -317,7 +340,7 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                 setNewFileOrFolderName("");
               }}
             >
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => {
@@ -330,7 +353,7 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
               }}
               disabled={!newFileOrFolderName.trim()}
             >
-              Créer
+              {t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -340,14 +363,14 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
       <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Créer un nouveau dossier</DialogTitle>
+            <DialogTitle>{t('files.newFolder')}</DialogTitle>
             <DialogDescription>
-              Entrez le nom du nouveau dossier.
+              {t('files.newFolderDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
-              placeholder="mon-dossier"
+              placeholder={t('files.newFolderNamePlaceholder')}
               value={newFileOrFolderName}
               onChange={(e) => setNewFileOrFolderName(e.target.value)}
               onKeyDown={(e) => {
@@ -368,7 +391,7 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
                 setNewFileOrFolderName("");
               }}
             >
-              Annuler
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => {
@@ -380,7 +403,7 @@ export function FileSidebar({ files, currentFile, onFileSelect, baseDir, onFileR
               }}
               disabled={!newFileOrFolderName.trim()}
             >
-              Créer
+              {t('common.create')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -3,12 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import { marked } from "marked";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslations } from "@/lib/i18n/provider";
 
 interface MarkdownPreviewProps {
   content: string;
+  onChange?: (content: string) => void;
 }
 
-export function MarkdownPreview({ content }: MarkdownPreviewProps) {
+export function MarkdownPreview({ content, onChange }: MarkdownPreviewProps) {
+  const t = useTranslations();
   const [html, setHtml] = useState("");
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -19,12 +22,25 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
     }
 
     const convertMarkdown = async () => {
+      // Configure marked options first
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+      });
+
+      // Enable task lists
+      marked.use({
+        gfm: true,
+        breaks: true,
+      });
+
       // Configure marked renderer for better code blocks
       const renderer = new marked.Renderer();
 
       renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
         const language = lang || 'text';
         const escapedCode = escapeHtml(text);
+        const copyText = t('preview.copyCode');
         return `
           <div class="code-block-wrapper">
             <div class="code-block-header">
@@ -37,7 +53,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
                 <svg class="check-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span class="copy-text">Copier</span>
+                <span class="copy-text">${copyText}</span>
               </button>
             </div>
             <pre class="code-block"><code class="language-${language}">${escapedCode}</code></pre>
@@ -55,7 +71,36 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
         return `<h${depth} id="${id}">${text}</h${depth}>`;
       };
 
-      // Configure marked options
+      // Make external links open in new tab
+      renderer.link = ({ href, title, text }: { href: string; title?: string | null; text: string }) => {
+        const isExternal = href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//');
+        const isAnchor = href.startsWith('#');
+
+        if (isExternal) {
+          const titleAttr = title ? ` title="${title}"` : '';
+          return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
+        } else if (isAnchor) {
+          const titleAttr = title ? ` title="${title}"` : '';
+          return `<a href="${href}"${titleAttr} class="anchor-link">${text}</a>`;
+        } else {
+          const titleAttr = title ? ` title="${title}"` : '';
+          return `<a href="${href}"${titleAttr}>${text}</a>`;
+        }
+      };
+
+      // Custom list item renderer to make checkboxes clickable
+      renderer.listitem = ({ text, task, checked }: { text: string; task?: boolean; checked?: boolean }) => {
+        if (task) {
+          // Create clickable checkbox without disabled attribute
+          const checkboxHtml = `<input type="checkbox" ${checked ? 'checked' : ''} />`;
+          // The text parameter is already HTML parsed by marked, just remove the disabled checkbox
+          const textWithoutCheckbox = text.replace(/<input[^>]*?disabled[^>]*>/, '').replace(/<input[^>]*>/, '');
+          return `<li class="task-list-item">${checkboxHtml}${textWithoutCheckbox}</li>\n`;
+        }
+        return `<li>${text}</li>\n`;
+      };
+
+      // Apply custom renderer
       marked.setOptions({
         breaks: true,
         gfm: true,
@@ -67,24 +112,64 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
     };
 
     convertMarkdown();
-  }, [content]);
+  }, [content, t]);
 
-  // Handle anchor clicks and copy code buttons
+  // Handle anchor clicks, copy code buttons, and checklist toggles
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
 
-      // Handle anchor links
-      if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#')) {
-        e.preventDefault();
-        const id = target.getAttribute('href')?.slice(1);
-        if (id && previewRef.current) {
-          const element = previewRef.current.querySelector(`#${id}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Handle checklist checkbox clicks
+      if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'checkbox') {
+        const checkbox = target as HTMLInputElement;
+
+        if (onChange) {
+          // Get all checkboxes to find the index
+          const allCheckboxes = previewRef.current?.querySelectorAll('input[type="checkbox"]');
+          const checkboxIndex = allCheckboxes ? Array.from(allCheckboxes).indexOf(checkbox) : -1;
+
+          if (checkboxIndex !== -1) {
+            // Toggle the checkbox in the markdown source
+            const lines = content.split('\n');
+            let currentCheckboxIndex = 0;
+
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i];
+              // Match task list items: - [ ] or - [x] or * [ ] or * [x]
+              const taskListMatch = line.match(/^(\s*[-*]\s+)\[([ xX])\]/);
+
+              if (taskListMatch) {
+                if (currentCheckboxIndex === checkboxIndex) {
+                  // Toggle this checkbox
+                  const isChecked = taskListMatch[2].toLowerCase() === 'x';
+                  const newCheckState = isChecked ? ' ' : 'x';
+                  lines[i] = line.replace(/\[([ xX])\]/, `[${newCheckState}]`);
+                  onChange(lines.join('\n'));
+                  return;
+                }
+                currentCheckboxIndex++;
+              }
+            }
           }
         }
         return;
+      }
+
+      // Handle anchor links (internal links with #)
+      if (target.tagName === 'A') {
+        const href = target.getAttribute('href');
+        if (href?.startsWith('#')) {
+          e.preventDefault();
+          const id = href.slice(1);
+          if (id && previewRef.current) {
+            const element = previewRef.current.querySelector(`#${id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }
+          return;
+        }
+        // For external links, let them open normally (target="_blank" is already set)
       }
 
       // Handle copy code buttons
@@ -126,18 +211,18 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
               if (copyIcon && checkIcon && copyText) {
                 copyIcon.classList.add('hidden');
                 checkIcon.classList.remove('hidden');
-                copyText.textContent = 'Copié !';
+                copyText.textContent = t('preview.copyCodeSuccess');
 
                 // Reset after 2 seconds
                 setTimeout(() => {
                   copyIcon.classList.remove('hidden');
                   checkIcon.classList.add('hidden');
-                  copyText.textContent = 'Copier';
+                  copyText.textContent = t('preview.copyCode');
                 }, 2000);
               }
             } catch (err) {
               console.error('Failed to copy code:', err);
-              alert('Impossible de copier le code dans le presse-papiers');
+              alert(t('errors.copyFailed'));
             }
           };
 
@@ -151,7 +236,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       previewElement.addEventListener('click', handleClick);
       return () => previewElement.removeEventListener('click', handleClick);
     }
-  }, [html]);
+  }, [html, content, onChange, t]);
 
   return (
     <ScrollArea className="h-full w-full">
@@ -163,8 +248,8 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
             <div className="flex items-center justify-center min-h-[50vh] text-muted-foreground">
               <div className="text-center">
                 <p className="text-4xl mb-4">✨</p>
-                <h2 className="text-xl font-semibold mb-2">Bienvenue sur MDParadise</h2>
-                <p>Sélectionnez un fichier pour commencer l'édition</p>
+                <h2 className="text-xl font-semibold mb-2">{t('editor.welcome')}</h2>
+                <p>{t('editor.selectFile')}</p>
               </div>
             </div>
           )}

@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "保存",
+    "saving": "正在保存...",
+    "saved": "已保存",
+    "unsaved": "未保存",
+    "loading": "加载中...",
+    "cancel": "取消",
+    "create": "创建",
+    "delete": "删除",
+    "rename": "重命名",
+    "copy": "复制",
+    "copied": "已复制！",
+    "search": "搜索",
+    "file": "文件",
+    "folder": "文件夹",
+    "close": "关闭"
+  },
+  "editor": {
+    "selectFile": "选择文件开始编辑",
+    "welcome": "欢迎使用 MDParadise",
+    "viewBoth": "同时显示",
+    "viewEditorOnly": "仅编辑器",
+    "viewPreviewOnly": "仅预览",
+    "editPreview": "编辑预览",
+    "readOnly": "只读",
+    "markdownize": "转换为 Markdown",
+    "markdownizeTitle": "粘贴格式化文本并转换为 Markdown",
+    "unsavedChanges": "有未保存的更改。是否继续？"
+  },
+  "files": {
+    "recentFiles": "最近的文件",
+    "noFiles": "无 Markdown 文件",
+    "noFilesFound": "未找到文件",
+    "newFile": "创建新文件",
+    "newFileDescription": "输入新 Markdown 文件的名称。如果未提供，将自动添加 .md 扩展名。",
+    "newFileNamePlaceholder": "我的文件",
+    "newFolder": "创建新文件夹",
+    "newFolderDescription": "输入新文件夹的名称。",
+    "newFolderNamePlaceholder": "我的文件夹",
+    "deleteConfirm": "确定要删除 \"{name}\" 吗？",
+    "treeView": "树状视图",
+    "listView": "列表视图",
+    "copyPath": "复制文件路径"
+  },
+  "search": {
+    "searchFiles": "搜索文件...",
+    "fileNames": "文件名",
+    "fileContent": "文件内容",
+    "searching": "搜索中...",
+    "noResults": "未找到结果",
+    "noResultsInContent": "内容中未找到结果",
+    "minCharacters": "请输入至少 2 个字符进行搜索",
+    "otherMatches": "+{count} 个其他匹配",
+    "line": "行"
+  },
+  "errors": {
+    "saveFailed": "保存文件失败",
+    "loadFailed": "加载文件失败",
+    "renameFailed": "重命名文件失败",
+    "deleteFailed": "删除文件失败",
+    "createFailed": "创建文件失败",
+    "createFolderFailed": "创建文件夹失败",
+    "moveFailed": "移动文件失败",
+    "copyFailed": "复制到剪贴板失败",
+    "clipboardEmpty": "剪贴板中未找到文本",
+    "clipboardPrompt": "请在此粘贴要插入的文本："
+  },
+  "preview": {
+    "copyCode": "复制",
+    "copyCodeSuccess": "已复制！"
+  }
+}

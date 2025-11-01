@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Tehirizina",
+    "saving": "Mitahiry...",
+    "saved": "Voatahiry",
+    "unsaved": "Tsy voatahiry",
+    "loading": "Mamaky...",
+    "cancel": "Ajanona",
+    "create": "Mamorona",
+    "delete": "Mamafa",
+    "rename": "Manova anarana",
+    "copy": "Mandika",
+    "copied": "Vonadika!",
+    "search": "Mitady",
+    "file": "Rakitra",
+    "folder": "Laha-tahiry",
+    "close": "Mihidy"
+  },
+  "editor": {
+    "selectFile": "Mifidiana rakitra mba hanomboka ny fanovana",
+    "welcome": "Tonga soa eto amin'ny MDParadise",
+    "viewBoth": "Asehoy ny roa",
+    "viewEditorOnly": "Mpanonta ihany",
+    "viewPreviewOnly": "Topi-maso ihany",
+    "editPreview": "Manova ny topi-maso",
+    "readOnly": "Vakiana ihany",
+    "markdownize": "Ovay ho Markdown",
+    "markdownizeTitle": "Apetaho ny lahatsoratra voalamina ka ovaina ho markdown",
+    "unsavedChanges": "Misy fanovana tsy voatahiry. Te hitohy ve ianao?"
+  },
+  "files": {
+    "recentFiles": "Rakitra vao haingana",
+    "noFiles": "Tsy misy rakitra markdown",
+    "noFilesFound": "Tsy nahita rakitra",
+    "newFile": "Mamorona rakitra vaovao",
+    "newFileDescription": "Ampidiro ny anaran'ny rakitra markdown vaovao. Ny .md dia hanampy ho azy raha tsy misy.",
+    "newFileNamePlaceholder": "ny-rakitra",
+    "newFolder": "Mamorona laha-tahiry vaovao",
+    "newFolderDescription": "Ampidiro ny anaran'ny laha-tahiry vaovao.",
+    "newFolderNamePlaceholder": "ny-laha-tahiry",
+    "deleteConfirm": "Azo antoka ve fa te hamafa \"{name}\" ianao?",
+    "treeView": "Fijerena hazo",
+    "listView": "Fijerena lisitra",
+    "copyPath": "Adikao ny lalan'ny rakitra"
+  },
+  "search": {
+    "searchFiles": "Mitady rakitra...",
+    "fileNames": "Anaran-drakitra",
+    "fileContent": "Atin'ny rakitra",
+    "searching": "Mitady...",
+    "noResults": "Tsy nahita valiny",
+    "noResultsInContent": "Tsy nahita valiny ao amin'ny votoaty",
+    "minCharacters": "Ampidiro litera 2 fara fahakeliny mba hitady",
+    "otherMatches": "+{count} hafa mitovy",
+    "line": "andalana"
+  },
+  "errors": {
+    "saveFailed": "Tsy voatahiry ny rakitra",
+    "loadFailed": "Tsy afaka namaky ny rakitra",
+    "renameFailed": "Tsy afaka nanova anarana ny rakitra",
+    "deleteFailed": "Tsy afaka namafa ny rakitra",
+    "createFailed": "Tsy afaka namorona ny rakitra",
+    "createFolderFailed": "Tsy afaka namorona ny laha-tahiry",
+    "moveFailed": "Tsy afaka namindra ny rakitra",
+    "copyFailed": "Tsy afaka nandika tao amin'ny clipboard",
+    "clipboardEmpty": "Tsy nahita lahatsoratra ao amin'ny clipboard",
+    "clipboardPrompt": "Apetaho eto ny lahatsoratra hampidirina:"
+  },
+  "preview": {
+    "copyCode": "Adikao",
+    "copyCodeSuccess": "Vonadika!"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Speichern",
+    "saving": "Wird gespeichert...",
+    "saved": "Gespeichert",
+    "unsaved": "Nicht gespeichert",
+    "loading": "Lädt...",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "delete": "Löschen",
+    "rename": "Umbenennen",
+    "copy": "Kopieren",
+    "copied": "Kopiert!",
+    "search": "Suchen",
+    "file": "Datei",
+    "folder": "Ordner",
+    "close": "Schließen"
+  },
+  "editor": {
+    "selectFile": "Datei auswählen, um mit der Bearbeitung zu beginnen",
+    "welcome": "Willkommen bei MDParadise",
+    "viewBoth": "Beide anzeigen",
+    "viewEditorOnly": "Nur Editor",
+    "viewPreviewOnly": "Nur Vorschau",
+    "editPreview": "Vorschau bearbeiten",
+    "readOnly": "Schreibgeschützt",
+    "markdownize": "In Markdown konvertieren",
+    "markdownizeTitle": "Formatierten Text einfügen und in Markdown konvertieren",
+    "unsavedChanges": "Es gibt nicht gespeicherte Änderungen. Möchten Sie fortfahren?"
+  },
+  "files": {
+    "recentFiles": "Zuletzt verwendete Dateien",
+    "noFiles": "Keine Markdown-Dateien",
+    "noFilesFound": "Keine Dateien gefunden",
+    "newFile": "Neue Datei erstellen",
+    "newFileDescription": "Geben Sie den Namen der neuen Markdown-Datei ein. Die Erweiterung .md wird automatisch hinzugefügt, falls nicht vorhanden.",
+    "newFileNamePlaceholder": "meine-datei",
+    "newFolder": "Neuen Ordner erstellen",
+    "newFolderDescription": "Geben Sie den Namen des neuen Ordners ein.",
+    "newFolderNamePlaceholder": "mein-ordner",
+    "deleteConfirm": "Sind Sie sicher, dass Sie \"{name}\" löschen möchten?",
+    "treeView": "Baumansicht",
+    "listView": "Listenansicht",
+    "copyPath": "Dateipfad kopieren"
+  },
+  "search": {
+    "searchFiles": "Dateien durchsuchen...",
+    "fileNames": "Dateinamen",
+    "fileContent": "Dateiinhalt",
+    "searching": "Suche läuft...",
+    "noResults": "Keine Ergebnisse gefunden",
+    "noResultsInContent": "Keine Ergebnisse im Inhalt gefunden",
+    "minCharacters": "Geben Sie mindestens 2 Zeichen ein, um zu suchen",
+    "otherMatches": "+{count} weitere Übereinstimmungen",
+    "line": "Zeile"
+  },
+  "errors": {
+    "saveFailed": "Fehler beim Speichern der Datei",
+    "loadFailed": "Fehler beim Laden der Datei",
+    "renameFailed": "Fehler beim Umbenennen der Datei",
+    "deleteFailed": "Fehler beim Löschen der Datei",
+    "createFailed": "Fehler beim Erstellen der Datei",
+    "createFolderFailed": "Fehler beim Erstellen des Ordners",
+    "moveFailed": "Fehler beim Verschieben der Datei",
+    "copyFailed": "Fehler beim Kopieren in die Zwischenablage",
+    "clipboardEmpty": "Kein Text in der Zwischenablage gefunden",
+    "clipboardPrompt": "Fügen Sie hier den einzufügenden Text ein:"
+  },
+  "preview": {
+    "copyCode": "Kopieren",
+    "copyCodeSuccess": "Kopiert!"
+  }
+}

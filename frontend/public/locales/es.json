@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "unsaved": "No guardado",
+    "loading": "Cargando...",
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "delete": "Eliminar",
+    "rename": "Renombrar",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "search": "Buscar",
+    "file": "Archivo",
+    "folder": "Carpeta",
+    "close": "Cerrar"
+  },
+  "editor": {
+    "selectFile": "Selecciona un archivo para comenzar a editar",
+    "welcome": "Bienvenido a MDParadise",
+    "viewBoth": "Mostrar ambos",
+    "viewEditorOnly": "Solo editor",
+    "viewPreviewOnly": "Solo vista previa",
+    "editPreview": "Editar vista previa",
+    "readOnly": "Solo lectura",
+    "markdownize": "Convertir a Markdown",
+    "markdownizeTitle": "Pega texto formateado y conviértelo a Markdown",
+    "unsavedChanges": "Hay cambios sin guardar. ¿Deseas continuar?"
+  },
+  "files": {
+    "recentFiles": "Archivos recientes",
+    "noFiles": "Sin archivos Markdown",
+    "noFilesFound": "No se encontraron archivos",
+    "newFile": "Crear nuevo archivo",
+    "newFileDescription": "Introduce el nombre del nuevo archivo Markdown. La extensión .md se agregará automáticamente si no se proporciona.",
+    "newFileNamePlaceholder": "mi-archivo",
+    "newFolder": "Crear nueva carpeta",
+    "newFolderDescription": "Introduce el nombre de la nueva carpeta.",
+    "newFolderNamePlaceholder": "mi-carpeta",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar \"{name}\"?",
+    "treeView": "Vista de árbol",
+    "listView": "Vista de lista",
+    "copyPath": "Copiar ruta del archivo"
+  },
+  "search": {
+    "searchFiles": "Buscar archivos...",
+    "fileNames": "Nombres de archivos",
+    "fileContent": "Contenido del archivo",
+    "searching": "Buscando...",
+    "noResults": "No se encontraron resultados",
+    "noResultsInContent": "No se encontraron resultados en el contenido",
+    "minCharacters": "Introduce al menos 2 caracteres para buscar",
+    "otherMatches": "+{count} coincidencias más",
+    "line": "línea"
+  },
+  "errors": {
+    "saveFailed": "Error al guardar el archivo",
+    "loadFailed": "Error al cargar el archivo",
+    "renameFailed": "Error al renombrar el archivo",
+    "deleteFailed": "Error al eliminar el archivo",
+    "createFailed": "Error al crear el archivo",
+    "createFolderFailed": "Error al crear la carpeta",
+    "moveFailed": "Error al mover el archivo",
+    "copyFailed": "Error al copiar al portapapeles",
+    "clipboardEmpty": "No se encontró texto en el portapapeles",
+    "clipboardPrompt": "Pega aquí el texto a insertar:"
+  },
+  "preview": {
+    "copyCode": "Copiar",
+    "copyCodeSuccess": "¡Copiado!"
+  }
+}

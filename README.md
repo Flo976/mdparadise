@@ -32,10 +32,12 @@
 - **Three view modes**: Both panels / Editor only / Preview only
 - **Mobile responsive**: Full tablet and mobile support
 - **Dark theme**: One Dark theme for the editor
+- **Multilingual**: 8 languages supported (FR, EN, MG, DE, ZH-CN, ES, IT, RU)
 
 ### 📝 Powerful Editing
 - **Syntax highlighting**: CodeMirror with markdown support
 - **Live preview**: Instant rendering as you type
+- **Markdownizer**: Convert formatted text (emojis, checkboxes) to clean markdown
 - **Copy code blocks**: One-click copy button on all code blocks
 - **Anchor navigation**: Functional table of contents links
 - **Auto-save detection**: Warns before losing unsaved changes
@@ -51,6 +53,7 @@
 ### 🚀 Developer Experience
 - **npm CLI**: Single command to launch from any directory
 - **Auto port detection**: Runs multiple instances without conflicts
+- **Instance switcher**: Navigate between multiple instances from the sidebar
 - **Hot reload**: Next.js dev server with instant updates
 - **TypeScript**: Full type safety
 - **Modern stack**: Next.js 16, React 19, Tailwind CSS 4
@@ -217,7 +220,7 @@ mdparadise --version
 
 ### Multiple Instances
 
-MDParadise automatically detects port conflicts and finds the next available port:
+MDParadise automatically detects port conflicts and finds the next available port. You can also navigate between instances directly from the sidebar.
 
 ```bash
 # Terminal 1
@@ -235,6 +238,15 @@ cd ~/project-c
 mdparadise
 # → Automatically starts on port 4447
 ```
+
+**Instance Switcher**: When multiple instances are running, a footer appears in the sidebar showing:
+- All active MDParadise instances with their ports and directories
+- Current instance indicator (✓)
+- Click any instance to open it in a new tab
+- Auto-refresh every 10 seconds
+- Works on localhost, LAN, and remote access
+
+For more details, see [MULTIPLE_INSTANCES.md](MULTIPLE_INSTANCES.md).
 
 ### Keyboard Shortcuts
 
@@ -259,6 +271,35 @@ Click the view toggle button to switch between:
 4. Changes are automatically converted back to markdown
 5. Click **"Read Only"** to return to normal preview
 
+### Markdownizer
+
+Convert formatted text with emojis and checkboxes into clean markdown:
+
+1. Click the **"Markdownizer"** button in the toolbar
+2. Paste your formatted text (from notes, documents, etc.)
+3. Text is automatically converted to proper markdown:
+   - `☐ Task` → `- [ ] Task` (unchecked checkbox)
+   - `✅ Done` → `- [x] Done` (checked checkbox)
+   - `📋 Title` → `## 📋 Title` (emoji heading)
+   - Indented lists → Proper markdown lists
+4. The converted markdown replaces your editor content
+
+For examples, see [TEST_MARKDOWNISER.md](TEST_MARKDOWNISER.md).
+
+### Language Selection
+
+Click the flag icon in the header to switch between languages:
+- Français (FR)
+- English (EN)
+- Malagasy (MG)
+- Deutsch (DE)
+- 简体中文 (ZH-CN)
+- Español (ES)
+- Italiano (IT)
+- Русский (RU)
+
+Your language preference is saved automatically.
+
 ---
 
 ## 🏗️ Architecture
@@ -272,13 +313,17 @@ Click the view toggle button to switch between:
 │  - Markdown Preview                     │
 │  - shadcn/ui Components                 │
 │  - Tailwind CSS 4                       │
+│  - i18n (8 languages)                   │
+│  - Instance Switcher                    │
+│  - Markdownizer                         │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
 │  Next.js 16 (App Router)                │
-│  - API Routes (/api/files, /api/file/*) │
+│  - /api/files (file listing)            │
+│  - /api/file/* (read/write)             │
+│  - /api/instances (multi-instance)      │
 │  - Server-side file operations          │
-│  - Development server                   │
 └──────────────┬──────────────────────────┘
                │
 ┌──────────────▼──────────────────────────┐
@@ -298,9 +343,11 @@ mdparadise/
 │   │   ├── api/
 │   │   │   ├── files/
 │   │   │   │   └── route.ts        # GET /api/files
-│   │   │   └── file/
-│   │   │       └── [...filepath]/
-│   │   │           └── route.ts    # GET/POST /api/file/*
+│   │   │   ├── file/
+│   │   │   │   └── [...filepath]/
+│   │   │   │       └── route.ts    # GET/POST /api/file/*
+│   │   │   └── instances/
+│   │   │       └── route.ts        # GET /api/instances
 │   │   ├── page.tsx                # Main page
 │   │   ├── layout.tsx              # Root layout
 │   │   └── globals.css             # Global styles
@@ -311,20 +358,33 @@ mdparadise/
 │   │   │   ├── preview.tsx         # Markdown preview
 │   │   │   ├── wysiwyg-editor.tsx  # WYSIWYG editor
 │   │   │   ├── file-sidebar.tsx    # File browser (desktop)
-│   │   │   └── file-list-content.tsx # File list (mobile)
+│   │   │   ├── file-list-content.tsx # File list (mobile)
+│   │   │   └── instance-switcher.tsx # Instance navigation
+│   │   ├── language-selector.tsx   # i18n language picker
 │   │   └── ui/                     # shadcn/ui components
 │   ├── lib/
 │   │   ├── api/
 │   │   │   └── client.ts           # API client
-│   │   └── persistence.ts          # LocalStorage utils
+│   │   ├── i18n/
+│   │   │   ├── config.ts           # i18n configuration
+│   │   │   └── provider.tsx        # i18n provider
+│   │   ├── persistence.ts          # LocalStorage utils
+│   │   └── markdown-formatter.ts   # Markdownizer
+│   ├── locales/
+│   │   ├── fr.json                 # French translations
+│   │   ├── en.json                 # English translations
+│   │   └── ...                     # Other languages
 │   ├── types/
 │   │   └── index.ts                # TypeScript types
 │   ├── bin/
 │   │   └── mdparadise.js           # CLI entry point
 │   ├── package.json
 │   └── next.config.ts
-├── build-cli.sh                    # Build script
+├── build-cli.sh                    # Build script (Linux/macOS)
+├── build-cli.ps1                   # Build script (Windows)
 ├── CLAUDE.md                       # AI context file
+├── MULTIPLE_INSTANCES.md           # Multi-instance guide
+├── TEST_MARKDOWNISER.md            # Markdownizer examples
 ├── LICENSE
 ├── .gitignore
 └── README.md
@@ -380,6 +440,31 @@ Saves content to a file.
 {
   "success": true,
   "message": "File saved successfully"
+}
+```
+
+#### GET /api/instances
+Returns list of all running MDParadise instances.
+
+**Response:**
+```json
+{
+  "success": true,
+  "instances": [
+    {
+      "port": 4445,
+      "baseDir": "/home/user/notes",
+      "url": "http://localhost:4445",
+      "isCurrent": true
+    },
+    {
+      "port": 4446,
+      "baseDir": "/home/user/docs",
+      "url": "http://localhost:4446",
+      "isCurrent": false
+    }
+  ],
+  "currentPort": 4445
 }
 ```
 
@@ -483,6 +568,9 @@ Remove-Item -Path frontend\.next\dev\lock -Force
 - [x] Auto port detection
 - [x] State persistence
 - [x] Mobile responsive
+- [x] Internationalization (8 languages)
+- [x] Instance switcher (navigate between multiple instances)
+- [x] Markdownizer (convert formatted text to markdown)
 - [ ] Syntax highlighting in code blocks
 - [ ] Git integration (show file status)
 - [ ] Multiple color themes

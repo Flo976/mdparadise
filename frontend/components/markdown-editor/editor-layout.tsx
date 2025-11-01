@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X, Copy, Check, Loader2, Folder } from "lucide-react";
+import { Menu, Save, Eye, EyeOff, Code, Edit3, Search, FileText, X, Copy, Check, Loader2, Folder, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -22,13 +22,17 @@ import { FileListContent } from "./file-list-content";
 import { MarkdownEditor } from "./editor";
 import { MarkdownPreview } from "./preview";
 import { WysiwygEditor } from "./wysiwyg-editor";
+import { LanguageSelector } from "@/components/language-selector";
 import { apiClient } from "@/lib/api/client";
 import { saveEditorState, loadEditorState } from "@/lib/persistence";
+import { autoFormatToMarkdown } from "@/lib/markdown-formatter";
+import { useTranslations } from "@/lib/i18n/provider";
 import type { MarkdownFile, SearchResult } from "@/types";
 
 type ViewMode = "both" | "editor" | "preview";
 
 export function EditorLayout() {
+  const t = useTranslations();
   const [files, setFiles] = useState<MarkdownFile[]>([]);
   const [currentFile, setCurrentFile] = useState<string | null>(null);
   const [content, setContent] = useState("");
@@ -166,9 +170,7 @@ export function EditorLayout() {
     }
 
     if (hasUnsavedChanges) {
-      const confirmed = window.confirm(
-        "Vous avez des modifications non enregistrées. Voulez-vous continuer ?"
-      );
+      const confirmed = window.confirm(t('editor.unsavedChanges'));
       if (!confirmed) return;
     }
 
@@ -183,7 +185,7 @@ export function EditorLayout() {
     } catch (error) {
       console.error("Failed to load file:", error);
     }
-  }, [currentFile, hasUnsavedChanges]);
+  }, [currentFile, hasUnsavedChanges, t]);
 
   // Save file
   const handleSave = useCallback(async () => {
@@ -195,15 +197,15 @@ export function EditorLayout() {
       if (response.success) {
         setOriginalContent(content);
       } else {
-        alert("Erreur : " + response.error);
+        alert(t('errors.saveFailed') + ": " + response.error);
       }
     } catch (error) {
       console.error("Failed to save file:", error);
-      alert("Échec de l'enregistrement du fichier");
+      alert(t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
-  }, [currentFile, content]);
+  }, [currentFile, content, t]);
 
   // Keyboard shortcut for save
   useEffect(() => {
@@ -304,6 +306,17 @@ export function EditorLayout() {
     }
   }, [currentFile]);
 
+  // Auto-format content to markdown
+  const handleMarkdownize = useCallback(() => {
+    if (!currentFile || !content.trim()) return;
+
+    // Format the current content
+    const formattedText = autoFormatToMarkdown(content);
+
+    // Update content
+    setContent(formattedText);
+  }, [currentFile, content]);
+
   // Handle file rename
   const handleFileRename = useCallback(async (filepath: string, newName: string) => {
     try {
@@ -316,13 +329,13 @@ export function EditorLayout() {
           setCurrentFile(response.newPath);
         }
       } else {
-        alert("Erreur : " + response.error);
+        alert(t('errors.renameFailed') + ": " + response.error);
       }
     } catch (error) {
       console.error("Failed to rename file:", error);
-      alert("Échec du renommage du fichier");
+      alert(t('errors.renameFailed'));
     }
-  }, [currentFile, loadFiles]);
+  }, [currentFile, loadFiles, t]);
 
   // Handle file delete
   const handleFileDelete = useCallback(async (filepath: string) => {
@@ -338,13 +351,13 @@ export function EditorLayout() {
           setOriginalContent("");
         }
       } else {
-        alert("Erreur : " + response.error);
+        alert(t('errors.deleteFailed') + ": " + response.error);
       }
     } catch (error) {
       console.error("Failed to delete file:", error);
-      alert("Échec de la suppression du fichier");
+      alert(t('errors.deleteFailed'));
     }
-  }, [currentFile, loadFiles]);
+  }, [currentFile, loadFiles, t]);
 
   // Handle file create
   const handleFileCreate = useCallback(async (name: string) => {
@@ -358,13 +371,13 @@ export function EditorLayout() {
           await handleFileSelect(response.path);
         }
       } else {
-        alert("Erreur : " + response.error);
+        alert(t('errors.createFailed') + ": " + response.error);
       }
     } catch (error) {
       console.error("Failed to create file:", error);
-      alert("Échec de la création du fichier");
+      alert(t('errors.createFailed'));
     }
-  }, [loadFiles, handleFileSelect]);
+  }, [loadFiles, handleFileSelect, t]);
 
   // Handle folder create
   const handleFolderCreate = useCallback(async (name: string) => {
@@ -374,13 +387,13 @@ export function EditorLayout() {
         // Reload files list
         await loadFiles();
       } else {
-        alert("Erreur : " + response.error);
+        alert(t('errors.createFolderFailed') + ": " + response.error);
       }
     } catch (error) {
       console.error("Failed to create folder:", error);
-      alert("Échec de la création du dossier");
+      alert(t('errors.createFolderFailed'));
     }
-  }, [loadFiles]);
+  }, [loadFiles, t]);
 
   // Handle file move
   const handleFileMove = useCallback(async (sourcePath: string, destinationPath: string) => {
@@ -394,18 +407,18 @@ export function EditorLayout() {
           setCurrentFile(response.newPath);
         }
       } else {
-        alert("Erreur : " + response.error);
+        alert(t('errors.moveFailed') + ": " + response.error);
       }
     } catch (error) {
       console.error("Failed to move file:", error);
-      alert("Échec du déplacement du fichier");
+      alert(t('errors.moveFailed'));
     }
-  }, [currentFile, loadFiles]);
+  }, [currentFile, loadFiles, t]);
 
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground">Chargement...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -447,7 +460,7 @@ export function EditorLayout() {
 
       <SidebarInset className="flex flex-col h-screen overflow-hidden">
         {/* Toolbar */}
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4" style={{ backgroundColor: '#FDFDF7' }}>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button
@@ -468,7 +481,7 @@ export function EditorLayout() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Rechercher des fichiers..."
+                placeholder={t('search.searchFiles')}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -495,8 +508,8 @@ export function EditorLayout() {
                   {filteredFiles.length === 0 && contentSearchResults.length === 0 && !isSearchingContent ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
                       {search.trim().length < 2
-                        ? "Entrez au moins 2 caractères pour rechercher"
-                        : "Aucun résultat trouvé"}
+                        ? t('search.minCharacters')
+                        : t('search.noResults')}
                     </div>
                   ) : (
                     <>
@@ -506,7 +519,7 @@ export function EditorLayout() {
                           <div className="px-4 py-2 bg-muted/50 flex items-center gap-2">
                             <Folder className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs font-medium text-muted-foreground uppercase">
-                              Noms de fichiers ({filteredFiles.length})
+                              {t('search.fileNames')} ({filteredFiles.length})
                             </span>
                           </div>
                           <div className="py-1">
@@ -539,7 +552,7 @@ export function EditorLayout() {
                           <div className="px-4 py-2 bg-muted/50 flex items-center gap-2">
                             <Search className="h-4 w-4 text-muted-foreground" />
                             <span className="text-xs font-medium text-muted-foreground uppercase">
-                              Contenu des fichiers
+                              {t('search.fileContent')}
                               {!isSearchingContent && ` (${contentSearchResults.length})`}
                             </span>
                             {isSearchingContent && (
@@ -548,11 +561,11 @@ export function EditorLayout() {
                           </div>
                           {isSearchingContent ? (
                             <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                              Recherche en cours...
+                              {t('search.searching')}
                             </div>
                           ) : contentSearchResults.length === 0 ? (
                             <div className="px-4 py-4 text-center text-sm text-muted-foreground">
-                              Aucun résultat dans le contenu
+                              {t('search.noResultsInContent')}
                             </div>
                           ) : (
                             <div className="py-1">
@@ -576,7 +589,7 @@ export function EditorLayout() {
                                     {result.matches.slice(0, 2).map((match, matchIdx) => (
                                       <div key={matchIdx} className="ml-5 mb-1 last:mb-0">
                                         <div className="text-xs text-muted-foreground mb-0.5">
-                                          ligne {match.lineNumber}
+                                          {t('search.line')} {match.lineNumber}
                                         </div>
                                         <div className="text-xs bg-muted/50 p-1 rounded font-mono">
                                           {match.content.substring(0, match.startIndex)}
@@ -589,7 +602,7 @@ export function EditorLayout() {
                                     ))}
                                     {result.matches.length > 2 && (
                                       <div className="ml-5 text-xs text-muted-foreground italic">
-                                        +{result.matches.length - 2} autre(s) correspondance(s)
+                                        {t('search.otherMatches', { count: result.matches.length - 2 })}
                                       </div>
                                     )}
                                   </button>
@@ -623,7 +636,7 @@ export function EditorLayout() {
                       size="icon"
                       onClick={handleCopyPath}
                       className="h-6 w-6"
-                      title="Copier le chemin du fichier"
+                      title={t('files.copyPath')}
                     >
                       {copied ? (
                         <Check className="h-3 w-3 text-green-500" />
@@ -633,7 +646,7 @@ export function EditorLayout() {
                     </Button>
                     {!isMobile && (
                       <Badge variant={hasUnsavedChanges ? "destructive" : "secondary"} className="text-xs">
-                        {saving ? "Enregistrement..." : hasUnsavedChanges ? "Non enregistré" : "Enregistré"}
+                        {saving ? t('common.saving') : hasUnsavedChanges ? t('common.unsaved') : t('common.saved')}
                       </Badge>
                     )}
                   </div>
@@ -642,7 +655,7 @@ export function EditorLayout() {
                 <div className="lg:hidden">
                   {!isMobile && (
                     <Badge variant={hasUnsavedChanges ? "destructive" : "secondary"} className="text-xs">
-                      {saving ? "Enregistrement..." : hasUnsavedChanges ? "Non enregistré" : "Enregistré"}
+                      {saving ? t('common.saving') : hasUnsavedChanges ? t('common.unsaved') : t('common.saved')}
                     </Badge>
                   )}
                 </div>
@@ -655,6 +668,18 @@ export function EditorLayout() {
           {/* Desktop-only controls */}
           {!isMobile && (
             <div className="flex items-center gap-2">
+              {/* Markdowniser Button - Desktop */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMarkdownize}
+                disabled={!currentFile}
+                title={t('editor.markdownizeTitle')}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {t('editor.markdownize')}
+              </Button>
+
               {/* Editable Preview Toggle - Desktop */}
               {(viewMode === "preview" || viewMode === "both") && (
                 <Button
@@ -663,7 +688,7 @@ export function EditorLayout() {
                   onClick={() => setIsPreviewEditable(!isPreviewEditable)}
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
-                  {isPreviewEditable ? "Lecture seule" : "Éditer l'aperçu"}
+                  {isPreviewEditable ? t('editor.readOnly') : t('editor.editPreview')}
                 </Button>
               )}
 
@@ -676,19 +701,19 @@ export function EditorLayout() {
                 {viewMode === "both" && (
                   <>
                     <Eye className="h-4 w-4 mr-2" />
-                    Aperçu seul
+                    {t('editor.viewPreviewOnly')}
                   </>
                 )}
                 {viewMode === "preview" && (
                   <>
                     <Code className="h-4 w-4 mr-2" />
-                    Éditeur seul
+                    {t('editor.viewEditorOnly')}
                   </>
                 )}
                 {viewMode === "editor" && (
                   <>
                     <EyeOff className="h-4 w-4 mr-2" />
-                    Afficher les deux
+                    {t('editor.viewBoth')}
                   </>
                 )}
               </Button>
@@ -700,8 +725,11 @@ export function EditorLayout() {
                 size="sm"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Enregistrer
+                {t('common.save')}
               </Button>
+
+              {/* Language Selector */}
+              <LanguageSelector />
             </div>
           )}
         </header>
@@ -712,7 +740,7 @@ export function EditorLayout() {
             <div className="flex h-full items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <p className="text-4xl mb-4">📝</p>
-                <p className="text-lg">Sélectionnez un fichier pour commencer l'édition</p>
+                <p className="text-lg">{t('editor.selectFile')}</p>
               </div>
             </div>
           ) : (
@@ -734,7 +762,7 @@ export function EditorLayout() {
                   {isPreviewEditable ? (
                     <WysiwygEditor value={content} onChange={setContent} />
                   ) : (
-                    <MarkdownPreview content={content} />
+                    <MarkdownPreview content={content} onChange={setContent} />
                   )}
                 </ResizablePanel>
               )}

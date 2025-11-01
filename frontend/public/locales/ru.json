@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "saved": "Сохранено",
+    "unsaved": "Не сохранено",
+    "loading": "Загрузка...",
+    "cancel": "Отмена",
+    "create": "Создать",
+    "delete": "Удалить",
+    "rename": "Переименовать",
+    "copy": "Копировать",
+    "copied": "Скопировано!",
+    "search": "Поиск",
+    "file": "Файл",
+    "folder": "Папка",
+    "close": "Закрыть"
+  },
+  "editor": {
+    "selectFile": "Выберите файл для начала редактирования",
+    "welcome": "Добро пожаловать в MDParadise",
+    "viewBoth": "Показать оба",
+    "viewEditorOnly": "Только редактор",
+    "viewPreviewOnly": "Только предпросмотр",
+    "editPreview": "Редактировать предпросмотр",
+    "readOnly": "Только чтение",
+    "markdownize": "Преобразовать в Markdown",
+    "markdownizeTitle": "Вставьте форматированный текст и преобразуйте в Markdown",
+    "unsavedChanges": "Есть несохраненные изменения. Продолжить?"
+  },
+  "files": {
+    "recentFiles": "Недавние файлы",
+    "noFiles": "Нет файлов Markdown",
+    "noFilesFound": "Файлы не найдены",
+    "newFile": "Создать новый файл",
+    "newFileDescription": "Введите имя нового файла Markdown. Расширение .md будет добавлено автоматически, если не указано.",
+    "newFileNamePlaceholder": "мой-файл",
+    "newFolder": "Создать новую папку",
+    "newFolderDescription": "Введите имя новой папки.",
+    "newFolderNamePlaceholder": "моя-папка",
+    "deleteConfirm": "Вы уверены, что хотите удалить \"{name}\"?",
+    "treeView": "Древовидный вид",
+    "listView": "Список",
+    "copyPath": "Копировать путь к файлу"
+  },
+  "search": {
+    "searchFiles": "Поиск файлов...",
+    "fileNames": "Имена файлов",
+    "fileContent": "Содержимое файла",
+    "searching": "Поиск...",
+    "noResults": "Результаты не найдены",
+    "noResultsInContent": "Результаты в содержимом не найдены",
+    "minCharacters": "Введите не менее 2 символов для поиска",
+    "otherMatches": "+{count} других совпадений",
+    "line": "строка"
+  },
+  "errors": {
+    "saveFailed": "Ошибка при сохранении файла",
+    "loadFailed": "Ошибка при загрузке файла",
+    "renameFailed": "Ошибка при переименовании файла",
+    "deleteFailed": "Ошибка при удалении файла",
+    "createFailed": "Ошибка при создании файла",
+    "createFolderFailed": "Ошибка при создании папки",
+    "moveFailed": "Ошибка при перемещении файла",
+    "copyFailed": "Ошибка при копировании в буфер обмена",
+    "clipboardEmpty": "Текст в буфере обмена не найден",
+    "clipboardPrompt": "Вставьте сюда текст для вставки:"
+  },
+  "preview": {
+    "copyCode": "Копировать",
+    "copyCodeSuccess": "Скопировано!"
+  }
+}

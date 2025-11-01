@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Salva",
+    "saving": "Salvataggio...",
+    "saved": "Salvato",
+    "unsaved": "Non salvato",
+    "loading": "Caricamento...",
+    "cancel": "Annulla",
+    "create": "Crea",
+    "delete": "Elimina",
+    "rename": "Rinomina",
+    "copy": "Copia",
+    "copied": "Copiato!",
+    "search": "Cerca",
+    "file": "File",
+    "folder": "Cartella",
+    "close": "Chiudi"
+  },
+  "editor": {
+    "selectFile": "Seleziona un file per iniziare a modificare",
+    "welcome": "Benvenuto in MDParadise",
+    "viewBoth": "Mostra entrambi",
+    "viewEditorOnly": "Solo editor",
+    "viewPreviewOnly": "Solo anteprima",
+    "editPreview": "Modifica anteprima",
+    "readOnly": "Sola lettura",
+    "markdownize": "Converti in Markdown",
+    "markdownizeTitle": "Incolla testo formattato e convertilo in Markdown",
+    "unsavedChanges": "Ci sono modifiche non salvate. Vuoi continuare?"
+  },
+  "files": {
+    "recentFiles": "File recenti",
+    "noFiles": "Nessun file Markdown",
+    "noFilesFound": "Nessun file trovato",
+    "newFile": "Crea nuovo file",
+    "newFileDescription": "Inserisci il nome del nuovo file Markdown. L'estensione .md verrà aggiunta automaticamente se non fornita.",
+    "newFileNamePlaceholder": "il-mio-file",
+    "newFolder": "Crea nuova cartella",
+    "newFolderDescription": "Inserisci il nome della nuova cartella.",
+    "newFolderNamePlaceholder": "la-mia-cartella",
+    "deleteConfirm": "Sei sicuro di voler eliminare \"{name}\"?",
+    "treeView": "Vista ad albero",
+    "listView": "Vista elenco",
+    "copyPath": "Copia percorso file"
+  },
+  "search": {
+    "searchFiles": "Cerca file...",
+    "fileNames": "Nomi file",
+    "fileContent": "Contenuto file",
+    "searching": "Ricerca in corso...",
+    "noResults": "Nessun risultato trovato",
+    "noResultsInContent": "Nessun risultato trovato nel contenuto",
+    "minCharacters": "Inserisci almeno 2 caratteri per cercare",
+    "otherMatches": "+{count} altre corrispondenze",
+    "line": "riga"
+  },
+  "errors": {
+    "saveFailed": "Errore durante il salvataggio del file",
+    "loadFailed": "Errore durante il caricamento del file",
+    "renameFailed": "Errore durante la rinomina del file",
+    "deleteFailed": "Errore durante l'eliminazione del file",
+    "createFailed": "Errore durante la creazione del file",
+    "createFolderFailed": "Errore durante la creazione della cartella",
+    "moveFailed": "Errore durante lo spostamento del file",
+    "copyFailed": "Errore durante la copia negli appunti",
+    "clipboardEmpty": "Nessun testo trovato negli appunti",
+    "clipboardPrompt": "Incolla qui il testo da inserire:"
+  },
+  "preview": {
+    "copyCode": "Copia",
+    "copyCodeSuccess": "Copiato!"
+  }
+}

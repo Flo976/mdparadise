@@ -21,6 +21,12 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   DndContext,
   closestCenter,
   PointerSensor,
@@ -248,11 +254,20 @@ function SortableTreeItem({
                   }}
                   onBlur={() => setRenamingFile(null)}
                   autoFocus
-                  className="h-6 text-sm"
+                  className="h-6 text-xs"
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <span className="text-sm truncate">{node.name}</span>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-xs truncate block">{node.name}</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p className="max-w-xs break-all">{node.path}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
 

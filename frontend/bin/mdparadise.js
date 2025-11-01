@@ -94,10 +94,12 @@ program
     }
 
     // Set environment variables
+    // PORT must be set BEFORE starting Next.js so next.config.ts can read it
     process.env.MDPARADISE_BASE_DIR = baseDir;
     process.env.PORT = port.toString();
 
     // Start Next.js server
+    // Each instance will use .next-{port} directory (configured in next.config.ts)
     const isWindows = process.platform === 'win32';
     const nextCommand = isWindows ? 'next.cmd' : 'next';
     const nextBinPath = path.join(__dirname, '..', 'node_modules', '.bin');

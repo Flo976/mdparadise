@@ -13,6 +13,8 @@ interface MarkdownFile {
 
 // Dossiers à ignorer
 const IGNORED_DIRS = ['.git', 'node_modules', '__pycache__', '.venv', 'venv', '.next', 'dist', 'build'];
+// Dossiers spéciaux à toujours afficher
+const ALLOWED_HIDDEN_DIRS = ['.claude', '.codex'];
 
 async function getAllMarkdownFiles(baseDir: string): Promise<MarkdownFile[]> {
   const files: MarkdownFile[] = [];
@@ -28,7 +30,10 @@ async function getAllMarkdownFiles(baseDir: string): Promise<MarkdownFile[]> {
 
         if (entry.isDirectory()) {
           // Ignorer les dossiers spéciaux
-          if (!IGNORED_DIRS.includes(entry.name) && !entry.name.startsWith('.')) {
+          const isAllowedHidden = ALLOWED_HIDDEN_DIRS.includes(entry.name);
+          const shouldInclude = !IGNORED_DIRS.includes(entry.name) && (!entry.name.startsWith('.') || isAllowedHidden);
+
+          if (shouldInclude) {
             // Ajouter le dossier à la liste
             directories.add(relativePath);
             await walkDir(fullPath);

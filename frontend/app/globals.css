@@ -69,7 +69,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(0.991 0.003 102);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
@@ -229,6 +229,28 @@
     background-color: transparent;
     padding: 0;
     margin: 0;
+  }
+
+  /* Task list styles */
+  .prose .task-list-item {
+    @apply flex items-center gap-2;
+    list-style: none !important;
+  }
+
+  .prose .task-list-item input[type="checkbox"] {
+    @apply cursor-pointer flex-shrink-0;
+    width: 1.1em;
+    height: 1.1em;
+    margin: 0 !important;
+  }
+
+  .prose ul.contains-task-list {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .prose ul.contains-task-list > li {
+    padding-left: 0;
   }
 
   /* Mobile-optimized reading experience */

@@ -1,0 +1,73 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saved": "Enregistré",
+    "unsaved": "Non enregistré",
+    "loading": "Chargement...",
+    "cancel": "Annuler",
+    "create": "Créer",
+    "delete": "Supprimer",
+    "rename": "Renommer",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "search": "Rechercher",
+    "file": "Fichier",
+    "folder": "Dossier",
+    "close": "Fermer"
+  },
+  "editor": {
+    "selectFile": "Sélectionnez un fichier pour commencer l'édition",
+    "welcome": "Bienvenue sur MDParadise",
+    "viewBoth": "Afficher les deux",
+    "viewEditorOnly": "Éditeur seul",
+    "viewPreviewOnly": "Aperçu seul",
+    "editPreview": "Éditer l'aperçu",
+    "readOnly": "Lecture seule",
+    "markdownize": "Markdowniser",
+    "markdownizeTitle": "Coller du texte formaté et le convertir en markdown",
+    "unsavedChanges": "Vous avez des modifications non enregistrées. Voulez-vous continuer ?"
+  },
+  "files": {
+    "recentFiles": "Fichiers récents",
+    "noFiles": "Aucun fichier markdown",
+    "noFilesFound": "Aucun fichier trouvé",
+    "newFile": "Créer un nouveau fichier",
+    "newFileDescription": "Entrez le nom du nouveau fichier markdown. L'extension .md sera ajoutée automatiquement si nécessaire.",
+    "newFileNamePlaceholder": "mon-fichier",
+    "newFolder": "Créer un nouveau dossier",
+    "newFolderDescription": "Entrez le nom du nouveau dossier.",
+    "newFolderNamePlaceholder": "mon-dossier",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer \"{name}\" ?",
+    "treeView": "Vue arborescence",
+    "listView": "Vue liste",
+    "copyPath": "Copier le chemin du fichier"
+  },
+  "search": {
+    "searchFiles": "Rechercher des fichiers...",
+    "fileNames": "Noms de fichiers",
+    "fileContent": "Contenu des fichiers",
+    "searching": "Recherche en cours...",
+    "noResults": "Aucun résultat trouvé",
+    "noResultsInContent": "Aucun résultat dans le contenu",
+    "minCharacters": "Entrez au moins 2 caractères pour rechercher",
+    "otherMatches": "+{count} autre(s) correspondance(s)",
+    "line": "ligne"
+  },
+  "errors": {
+    "saveFailed": "Échec de l'enregistrement du fichier",
+    "loadFailed": "Impossible de charger le fichier",
+    "renameFailed": "Échec du renommage du fichier",
+    "deleteFailed": "Échec de la suppression du fichier",
+    "createFailed": "Échec de la création du fichier",
+    "createFolderFailed": "Échec de la création du dossier",
+    "moveFailed": "Échec du déplacement du fichier",
+    "copyFailed": "Impossible de copier dans le presse-papiers",
+    "clipboardEmpty": "Aucun texte détecté dans le presse-papiers",
+    "clipboardPrompt": "Collez votre texte à formater ici :"
+  },
+  "preview": {
+    "copyCode": "Copier",
+    "copyCodeSuccess": "Copié !"
+  }
+}
